@@ -1,0 +1,15 @@
+{
+  "name": "beescheduler",
+  "version": "0.0.1",
+  "description": "",
+  "main": "handler.js",
+  "dependencies": {
+    "beeminder": "^1.5.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Echo Nolan",
+  "license": "AGPL-1.0"
+}

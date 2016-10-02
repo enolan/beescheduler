@@ -1,0 +1,5 @@
+{
+  "esversion": 6,
+  "predef": ["module", "require"],
+  "strict": "global"
+}
