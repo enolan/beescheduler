@@ -1,5 +1,5 @@
 {
   "esversion": 6,
-  "predef": ["module", "require"],
+  "predef": ["module", "require", "console"],
   "strict": "global"
 }

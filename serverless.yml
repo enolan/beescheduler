@@ -47,6 +47,8 @@ provider:
 functions:
   setsched:
     handler: handler.setsched
+    events:
+      - schedule: rate(1 day)
 
 #    you can add any of the following events
 #    events:
