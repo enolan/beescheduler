@@ -23,7 +23,16 @@ function setRoad(goalName, roadAll) {
             'roadall': roadAll
         }
     };
-    return rqpr(opts);
+    if (roadAll.length === 0) {
+        return Promise.reject("empty road");
+    } else {
+        for (let i = 1; i < roadAll.length; i++) {
+            if (_.isEqual(roadAll[i], roadAll[i - 1])) {
+                return Promise.reject("duplicate row: " + roadAll[i].toString());
+            }
+        }
+        return rqpr(opts);
+    }
 }
 
 function getGoalPromise(bm, goalName) {
@@ -74,17 +83,17 @@ function scheduleGoal(bm, goalName, schedule) {
 }
 // Sunday, Monday...
 
-// const sched = {
-//     idris: [0, 7, 7, 6, 0, 0, 0],
-//     survey: [0, 0, 0, 0, 8, 2, 0],
-//     moonshot: [0, 0, 0, 0, 0, 5, 0]
-// };
 const sched = {
-    test: [1, 2, 5, 0, 9, 0.3, 4],
-    testb: [5, 4, 11, 3, 8, 0, 2],
-    testc: [0, 0, 0, 6, 0, 0, 2]
-
+    idris:    [0, 7, 7, 6, 0, 0, 0],
+    survey:   [0, 0, 0, 0, 8, 2, 0],
+    moonshot: [0, 0, 0, 0, 0, 5, 0]
 };
+// const sched = {
+//     test: [1, 2, 5, 0, 9, 0.3, 4],
+//     testb: [5, 4, 11, 3, 8, 0, 2],
+//     testc: [0, 0, 0, 6, 0, 0, 2]
+
+// };
 
 module.exports.setsched = (event, context, cb) => {
     let bm = beeminder(token);
