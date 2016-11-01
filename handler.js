@@ -47,6 +47,28 @@ function getGoalPromise(bm, goalName) {
     });
 }
 
+function getRUnitMultiplier(goalInfo) {
+    let res;
+    switch (goalInfo.runits) {
+    case 'y':
+        res = 365.25;
+        break;
+    case 'm':
+        res = 30;
+        break;
+    case 'w':
+        res = 7;
+        break;
+    case 'd':
+        res = 1;
+        break;
+    case 'h':
+        res = 1/24;
+        break;
+    }
+    return res;
+}
+
 function scheduleGoal(bm, goalName, schedule) {
     console.log("scheduleGoal " + goalName + " " + schedule);
     let oneWeekOut = moment().utcOffset(-4).set({
@@ -57,6 +79,7 @@ function scheduleGoal(bm, goalName, schedule) {
     }).add(7, 'days');
     return getGoalPromise(bm, goalName).then(goalInfo => {
         console.log(goalInfo);
+        let rUnitMultiplier = getRUnitMultiplier(goalInfo);
         let truncatedRoad =
             goalInfo.roadall.map(x => [moment(x[0], "X"), x[1], x[2]])
             .filter(x => x[0] < oneWeekOut).map(
@@ -72,7 +95,7 @@ function scheduleGoal(bm, goalName, schedule) {
             } else {
                 targetDate.add(i - oneWeekOutDay + 7, 'd');
             }
-            newSegment.push([beeDateFormat(targetDate), null, schedule[i]]);
+            newSegment.push([beeDateFormat(targetDate), null, rUnitMultiplier * schedule[i]]);
         }
         newSegment.sort(); // this is done by comparing on string representations.
         console.log("New segment:");

@@ -17,6 +17,7 @@ provider:
   name: aws
   runtime: nodejs4.3
   region: us-west-2
+  timeout: 10
 
 # you can overwrite defaults here
 #  stage: dev
