@@ -84,7 +84,8 @@ function scheduleGoal(bm, goalName, schedule) {
 // Sunday, Monday...
 
 const sched = {
-    idris:    [0, 7, 7, 6, 0, 0, 0],
+//    idris:    [0, 7, 7, 6, 0, 0, 0],
+    profitable: [0, 7, 7, 6, 0, 0, 0],
     survey:   [0, 0, 0, 0, 8, 2, 0],
     moonshot: [0, 0, 0, 0, 0, 5, 0]
 };
