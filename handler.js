@@ -50,21 +50,21 @@ function getGoalPromise(bm, goalName) {
 function getRUnitMultiplier(goalInfo) {
     let res;
     switch (goalInfo.runits) {
-    case 'y':
-        res = 365.25;
-        break;
-    case 'm':
-        res = 30;
-        break;
-    case 'w':
-        res = 7;
-        break;
-    case 'd':
-        res = 1;
-        break;
-    case 'h':
-        res = 1/24;
-        break;
+        case 'y':
+            res = 365.25;
+            break;
+        case 'm':
+            res = 30;
+            break;
+        case 'w':
+            res = 7;
+            break;
+        case 'd':
+            res = 1;
+            break;
+        case 'h':
+            res = 1 / 24;
+            break;
     }
     return res;
 }
@@ -107,9 +107,9 @@ function scheduleGoal(bm, goalName, schedule) {
 // Sunday, Monday...
 
 const sched = {
-//    idris:    [0, 7, 7, 6, 0, 0, 0],
+    //    idris:    [0, 7, 7, 6, 0, 0, 0],
     profitable: [0, 7, 7, 6, 0, 0, 0],
-    survey:   [0, 0, 0, 0, 8, 2, 0],
+    survey: [0, 0, 0, 0, 8, 2, 0],
     moonshot: [0, 0, 0, 0, 0, 5, 0]
 };
 // const sched = {
