@@ -131,4 +131,12 @@ module.exports.setsched = (event, context, cb) => {
         });
 };
 
-// You can add more handlers here, and reference them in serverless.yml
+module.exports.index = (event, context, cb) => {
+    cb(null, {
+        statusCode: 200,
+        headers: {
+            'Content-Type': 'text/html'
+        },
+        body: "'Sup?"
+    });
+};

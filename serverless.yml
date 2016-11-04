@@ -48,8 +48,14 @@ provider:
 functions:
   setsched:
     handler: handler.setsched
+#    events:
+#      - schedule: rate(1 day)
+  index:
+    handler: handler.index
     events:
-      - schedule: rate(1 day)
+      - http:
+          path: "index"
+          method: get
 
 #    you can add any of the following events
 #    events:
