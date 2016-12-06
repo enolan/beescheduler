@@ -4,6 +4,7 @@ const beeminder = require('beeminder');
 const rqpr = require('request-promise-native');
 const moment = require('moment');
 const _ = require('lodash/fp');
+const querystring = require('querystring');
 
 const token = "wF7Lo63rZv8qSHxbL-kh";
 
@@ -132,11 +133,50 @@ module.exports.setsched = (event, context, cb) => {
 };
 
 module.exports.index = (event, context, cb) => {
-    cb(null, {
-        statusCode: 200,
-        headers: {
-            'Content-Type': 'text/html'
-        },
-        body: "'Sup?"
-    });
+    let params = {
+        client_id: "atfphg2m06sjkavmodmwxxlfp",
+        redirect_uri: "https://beescheduler-dev.echonolan.net/",
+        response_type: "token"
+    };
+    let oauthUrl = "https://www.beeminder.com/apps/authorize?" + querystring.stringify(params);
+    let template = content => `
+<html>
+  <head>
+    <title>Beescheduler</title>
+  </head>
+  <body>
+    <p>
+      ${content}
+    </p>
+  </body>
+</html>
+`;
+    if (event.queryStringParameters) {
+        if (event.queryStringParameters.access_token && event.queryStringParameters.username) {
+            cb(null, {
+                statusCode: 200,
+                headers: {
+                    'Content-Type': 'text/html'
+                },
+                body: template(
+                    `Authorized! Token: ${event.queryStringParameters.access_token} Username: ${event.queryStringParameters.username}`)
+            });
+        } else {
+            cb(null, {
+                statusCode: 400,
+                headers: {
+                    'Content-Type': 'text/html'
+                },
+                body: template("Bad query parameters.")
+            });
+        }
+    } else {
+        cb(null, {
+            statusCode: 200,
+            headers: {
+                'Content-Type': 'text/html'
+            },
+            body: template(`<a href="${oauthUrl}">Authorize</a>`)
+        });
+    }
 };
