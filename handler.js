@@ -109,9 +109,9 @@ function scheduleGoal(bm, goalName, schedule) {
 
 const sched = {
     //    idris:    [0, 7, 7, 6, 0, 0, 0],
-    profitable: [0, 7, 7, 6, 0, 0, 0],
-    survey: [0, 0, 0, 0, 8, 2, 0],
-    moonshot: [0, 0, 0, 0, 0, 5, 0]
+    profitable: [0, 5, 5, 5, 0, 0, 0],
+    survey:     [0, 0, 0, 0, 5, 1, 0],
+    moonshot:   [0, 0, 0, 0, 0, 4, 0]
 };
 // const sched = {
 //     test: [1, 2, 5, 0, 9, 0.3, 4],
