@@ -62,10 +62,10 @@ class GoalsTable extends React.Component {
   }
   render() {
     return (
-      <table>
+      <table id="goaltable">
         <thead>
           <tr>
-            <td>Name</td>
+            <td>Goal name</td>
             <td>Sunday</td>
             <td>Monday</td>
             <td>Tuesday</td>
@@ -74,8 +74,10 @@ class GoalsTable extends React.Component {
             <td>Friday</td>
             <td>Saturday</td>
           </tr>
-          {this.state.goals.map(x => <GoalRow key={x.name} goal={x} />)}
         </thead>
+        <tbody>
+          {this.state.goals.map(x => <GoalRow key={x.name} goal={x} />)}
+        </tbody>
       </table>
     );
   }
