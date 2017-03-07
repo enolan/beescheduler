@@ -2,6 +2,12 @@ import React from 'react';
 import './App.css';
 import cookie from 'react-cookie';
 import queryString from 'query-string';
+import {
+  Col,
+  Grid,
+  Row,
+  Table
+} from 'react-bootstrap';
 
 class App extends React.Component {
   componentWillMount() {
@@ -30,6 +36,8 @@ class App extends React.Component {
     };
   }
   render() {
+    let header = {};
+    let body = {};
     if (!this.state.username) {
       let authParams = {
         client_id: "dqlmuqav6goh1cy9bdmpyu6wz",
@@ -37,13 +45,21 @@ class App extends React.Component {
         response_type: "token"
       };
       let authUrl = "https://www.beeminder.com/apps/authorize?" + queryString.stringify(authParams);
-      return (<a href={authUrl}>Authorize</a>);
+      header = <a href={authUrl}>Authorize</a>;
+    } else {
+      header = "Sup, " + this.state.username + " ?";
+      body = <GoalsTable username={this.state.username} token={this.state.token} />
     }
     return (
-      <div>
-        <h1>Sup, {this.state.username}?</h1>
-        <GoalsTable username={this.state.username} token={this.state.token} />
-      </div>);
+      <Grid>
+          <Row>
+              <Col md={12}>{header}</Col>
+          </Row>
+          <Row>
+              <Col md={12}>{body}</Col>
+          </Row>
+      </Grid>
+    )
   }
 }
 
@@ -62,23 +78,23 @@ class GoalsTable extends React.Component {
   }
   render() {
     return (
-      <table id="goaltable">
+      <Table>
         <thead>
           <tr>
-            <td>Goal name</td>
-            <td>Sunday</td>
-            <td>Monday</td>
-            <td>Tuesday</td>
-            <td>Wednesday</td>
-            <td>Thursday</td>
-            <td>Friday</td>
-            <td>Saturday</td>
+      {["Goal name",
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"].map(x => <th scope='col'>{x}</th>)}
           </tr>
         </thead>
         <tbody>
           {this.state.goals.map(x => <GoalRow key={x.name} goal={x} />)}
         </tbody>
-      </table>
+      </Table>
     );
   }
 }
@@ -86,14 +102,14 @@ class GoalsTable extends React.Component {
 function GoalRow(props) {
   let days;
   if (props.goal.schedule === undefined) {
-    days = Array(7);
+    days = Array(7).fill("?");
   } else {
     days = props.goal.schedule.map(x => x.toString());
   }
   let daysEls = days.map((str, idx) => <td key={idx}>{str}</td>);
   return (
     <tr>
-      <td>{props.goal.name}</td>
+      <th scope='row'>{props.goal.name}</th>
       {daysEls}
     </tr>
   );
