@@ -50,11 +50,11 @@ functions:
     handler: handler.setsched
     events:
       - schedule: rate(1 day)
-  index:
-    handler: handler.index
+  getGoalSlugs:
+    handler: handler.getGoalSlugs
     events:
       - http:
-          path: "/"
+          path: "/getGoalSlugs"
           method: get
 
 #    you can add any of the following events

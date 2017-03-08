@@ -48,6 +48,16 @@ function getGoalPromise(bm, goalName) {
     });
 }
 
+function getUserInfoPromise(token) {
+    return rqpr({
+        uri: 'https://www.beeminder.com/api/v1/users/me.json',
+        qs: {
+            'access_token': token
+        },
+        json: true
+    });
+}
+
 function getRUnitMultiplier(goalInfo) {
     let res;
     switch (goalInfo.runits) {
@@ -132,51 +142,40 @@ module.exports.setsched = (event, context, cb) => {
         });
 };
 
-module.exports.index = (event, context, cb) => {
-    let params = {
-        client_id: "atfphg2m06sjkavmodmwxxlfp",
-        redirect_uri: "https://beescheduler-dev.echonolan.net/",
-        response_type: "token"
-    };
-    let oauthUrl = "https://www.beeminder.com/apps/authorize?" + querystring.stringify(params);
-    let template = content => `
-<html>
-  <head>
-    <title>Beescheduler</title>
-  </head>
-  <body>
-    <p>
-      ${content}
-    </p>
-  </body>
-</html>
-`;
-    if (event.queryStringParameters) {
-        if (event.queryStringParameters.access_token && event.queryStringParameters.username) {
-            cb(null, {
-                statusCode: 200,
-                headers: {
-                    'Content-Type': 'text/html'
-                },
-                body: template(
-                    `Authorized! Token: ${event.queryStringParameters.access_token} Username: ${event.queryStringParameters.username}`)
-            });
-        } else {
-            cb(null, {
-                statusCode: 400,
-                headers: {
-                    'Content-Type': 'text/html'
-                },
-                body: template("Bad query parameters.")
-            });
-        }
-    } else {
-        cb(null, {
-            statusCode: 200,
-            headers: {
-                'Content-Type': 'text/html'
-            },
-            body: template(`<a href="${oauthUrl}">Authorize</a>`)
+function jsonResponse(cb, status, data) {
+    cb(null, {
+        statusCode: status,
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify(data)
+    });
+}
+
+module.exports.getGoalSlugs = (event, context, cb) => {
+    if (!event.queryStringParameters.access_token) {
+        jsonResponse(cb, 400, {
+            'error': 'missing access_token param'
         });
+        return;
+    } else {
+        rqpr({
+                uri: 'https://www.beeminder.com/api/v1/users/me.json',
+                qs: {
+                    'access_token': token
+                },
+                json: true
+            })
+            .then(
+                (uinfo => {
+                    console.log(uinfo);
+                    jsonResponse(cb, 200, uinfo.goals);
+                }),
+                (err => {
+                    console.log(err);
+                    jsonResponse(cb, 500, err);
+                }));
+        return;
     }
 };
