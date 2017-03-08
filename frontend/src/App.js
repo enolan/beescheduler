@@ -71,7 +71,7 @@ class GoalsTable extends React.Component {
     // Make XHR to Lambda here to get a list of all the user's goals and their
     // schedules.
     this.state = ({
-      goalslugs: ['poop', 'lift']
+      goalslugs: []
     });
 
     this.getGoalSlugs();
