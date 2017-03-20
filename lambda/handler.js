@@ -163,17 +163,15 @@ module.exports.getGoalSlugs = (event, context, cb) => {
         rqpr({
                 uri: 'https://www.beeminder.com/api/v1/users/me.json',
                 qs: {
-                    'access_token': token
+                    'access_token': event.queryStringParameters.access_token
                 },
                 json: true
             })
             .then(
                 (uinfo => {
-                    console.log(uinfo);
                     jsonResponse(cb, 200, uinfo.goals);
                 }),
                 (err => {
-                    console.log(err);
                     jsonResponse(cb, 500, err);
                 }));
         return;
