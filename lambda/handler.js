@@ -154,7 +154,7 @@ function jsonResponse(cb, status, data) {
 }
 
 module.exports.getGoalSlugs = (event, context, cb) => {
-    if (!event.queryStringParameters.access_token) {
+    if (!event.queryStringParameters || !event.queryStringParameters.access_token) {
         jsonResponse(cb, 400, {
             'error': 'missing access_token param'
         });
