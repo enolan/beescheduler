@@ -160,13 +160,7 @@ module.exports.getGoalSlugs = (event, context, cb) => {
         });
         return;
     } else {
-        rqpr({
-                uri: 'https://www.beeminder.com/api/v1/users/me.json',
-                qs: {
-                    'access_token': event.queryStringParameters.access_token
-                },
-                json: true
-            })
+        getUserInfoPromise(event.queryStringParameters.access_token)
             .then(
                 (uinfo => {
                     jsonResponse(cb, 200, uinfo.goals);
