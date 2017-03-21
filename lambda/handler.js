@@ -157,7 +157,8 @@ function jsonResponse(cb, status, data) {
 }
 
 module.exports.getGoalSlugs = (event, context, cb) => {
-    if (!event.queryStringParameters || !event.queryStringParameters.access_token) {
+    if (!event.queryStringParameters ||
+        !event.queryStringParameters.access_token) {
         jsonResponse(cb, 400, {
             'error': 'missing access_token param'
         });
@@ -191,7 +192,10 @@ function goalError(type, msg) {
     if (!ok) {
         throw "invalid goal error type!";
     } else {
-        return {type: type, msg: msg};
+        return {
+            type: type,
+            msg: msg
+        };
     }
 }
 
@@ -199,15 +203,23 @@ const userDataSchema = {
     type: "object",
     id: "http://echonolan.net/beescheduler-schema",
     properties: {
-        token: {type: "string"},
+        token: {
+            type: "string"
+        },
         goals: {
-            type: "object", additionalProperties: {
+            type: "object",
+            additionalProperties: {
                 type: "array",
-                items: {type: "number"},
+                items: {
+                    type: "number"
+                },
                 minItems: 7,
                 maxItems: 7
-            }},
-        name: {type: "string"}
+            }
+        },
+        name: {
+            type: "string"
+        }
     },
     additionalProperties: false,
     required: ["name", "token", "goals"]
@@ -225,23 +237,28 @@ function getStoredGoals(username) {
             return Promise.reject(goalError(goalErrorTypes.noSuchUser, ""));
         } else {
             let validationResult =
-                    jsonschema.validate(res.Item, userDataSchema);
+                jsonschema.validate(res.Item, userDataSchema);
             if (validationResult.valid) {
                 return Promise.resolve(res.Item);
             } else {
-                return Promise.reject(goalError(goalErrorTypes.badDb, validationResult.errors));
+                return Promise.reject(
+                    goalError(goalErrorTypes.badDb, validationResult.errors));
             }
         }
     });
 }
 
 module.exports.getStoredGoalsHTTP = (event, context, cb) => {
-    if (!event.queryStringParameters || !event.queryStringParameters.username || !event.queryStringParameters.token) {
+    if (!event.queryStringParameters ||
+        !event.queryStringParameters.username ||
+        !event.queryStringParameters.token) {
         jsonResponse(cb, 400, {
             'error': 'missing username or token param'
         });
     } else {
-        getStoredGoals(event.queryStringParameters.username, event.queryStringParameters.token)
+        getStoredGoals(
+            event.queryStringParameters.username,
+            event.queryStringParameters.token)
             .then(
                 val => {
                     if (val.token === event.queryStringParameters.token) {
