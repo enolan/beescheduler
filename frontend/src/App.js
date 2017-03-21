@@ -79,7 +79,7 @@ class GoalsTable extends React.Component {
     // Make XHR to Lambda here to get a list of all the user's goals and their
     // schedules.
     this.state = ({
-      goalslugs: []
+      goals: []
     });
 
     this.getGoalSlugs();
@@ -91,7 +91,9 @@ class GoalsTable extends React.Component {
       fetch(getSLSBaseURL() + "/getGoalSlugs?" +
             queryString.stringify(queryParams));
     let respArray = await resp.json();
-    this.setState({goalslugs: respArray});
+    this.setState({goals: respArray.map(
+      s => {return {slug: s, schedule: "fetching"};})
+    });
   }
 
   render() {
@@ -111,7 +113,7 @@ class GoalsTable extends React.Component {
           </tr>
         </thead>
         <tbody>
-            {this.state.goalslugs.map(x => <GoalRow key={x} slug={x} />)}
+            {this.state.goals.map(x => <GoalRow key={x.slug} goal={x} />)}
         </tbody>
       </Table>
     );
@@ -121,32 +123,25 @@ class GoalsTable extends React.Component {
 class GoalRow extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {scheduled: "fetching"};
   }
   render() {
     let days;
 
-    switch (this.state.scheduled) {
-      case "yes":
-        days = this.state.schedule.map(x => x.toString());
-        break;
-      case "fetching":
-        days = Array(7).fill("?");
-        break;
-      case "no":
-        days = Array(7).fill("N/A");
-        break;
-      default:
-        throw this.state.scheduled;
+    if (this.props.goal.schedule === "fetching") {
+      days = Array(7).fill("?");
+    } else if (this.props.goal.schedule === "unscheduled") {
+      days = Array(7).fill("N/A");
+    } else {
+      days = this.props.goal.schedule.map(x => x.toString());
     }
     let daysEls = days.map((str, idx) => <td key={idx}>{str}</td>);
     return (
       <tr>
         <th scope='row'>
-            {this.props.slug}
+            {this.props.goal.slug}
         </th>
         <td>
-            <Checkbox checked={this.state.scheduled === "yes"}/>
+            <Checkbox checked={Array.isArray(this.props.goal.schedule)}/>
         </td>
         {daysEls}
     </tr>
