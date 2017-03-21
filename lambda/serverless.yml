@@ -99,3 +99,4 @@ custom:
     start:
       inMemory: true
       migrate: true
+      port: 8000
