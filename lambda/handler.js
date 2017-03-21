@@ -221,7 +221,6 @@ function getStoredGoals(username) {
             name: username
         }
     }).promise().then(res => {
-        console.log(res);
         if (_.isEqual(res, {})) {
             return Promise.reject(goalError(goalErrorTypes.noSuchUser, ""));
         } else {
@@ -245,7 +244,6 @@ module.exports.getStoredGoalsHTTP = (event, context, cb) => {
         getStoredGoals(event.queryStringParameters.username, event.queryStringParameters.token)
             .then(
                 val => {
-                    console.log(val);
                     if (val.token === event.queryStringParameters.token) {
                         jsonResponse(cb, 200, val);
                     } else {
@@ -253,7 +251,6 @@ module.exports.getStoredGoalsHTTP = (event, context, cb) => {
                     }
                 },
                 fail => {
-                    console.log(fail);
                     if (fail.type === goalErrorTypes.noSuchUser) {
                         jsonResponse(cb, 404, {});
                     } else {
