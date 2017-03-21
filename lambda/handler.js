@@ -5,6 +5,9 @@ const rqpr = require('request-promise-native');
 const moment = require('moment');
 const _ = require('lodash/fp');
 const querystring = require('querystring');
+const dynamodb = require('serverless-dynamodb-client');
+const dynamoDoc = dynamodb.doc;
+const jsonschema = require('jsonschema');
 
 const token = "wF7Lo63rZv8qSHxbL-kh";
 
@@ -169,5 +172,93 @@ module.exports.getGoalSlugs = (event, context, cb) => {
                     jsonResponse(cb, 500, err);
                 }));
         return;
+    }
+};
+
+const goalErrorTypes = {
+    badDb: "invalid item in db",
+    noSuchUser: "no such user"
+};
+
+function goalError(type, msg) {
+    let ok = false;
+    for (let ty of _.values(goalErrorTypes)) {
+        if (type === ty) {
+            ok = true;
+            break;
+        }
+    }
+    if (!ok) {
+        throw "invalid goal error type!";
+    } else {
+        return {type: type, msg: msg};
+    }
+}
+
+const userDataSchema = {
+    type: "object",
+    id: "http://echonolan.net/beescheduler-schema",
+    properties: {
+        token: {type: "string"},
+        goals: {
+            type: "object", additionalProperties: {
+                type: "array",
+                items: {type: "number"},
+                minItems: 7,
+                maxItems: 7
+            }},
+        name: {type: "string"}
+    },
+    additionalProperties: false,
+    required: ["name", "token", "goals"]
+};
+
+// Pull a user's goals out of the DB and validate it.
+function getStoredGoals(username) {
+    return dynamoDoc.get({
+        TableName: 'users',
+        Key: {
+            name: username
+        }
+    }).promise().then(res => {
+        console.log(res);
+        if (_.isEqual(res, {})) {
+            return Promise.reject(goalError(goalErrorTypes.noSuchUser, ""));
+        } else {
+            let validationResult =
+                    jsonschema.validate(res.Item, userDataSchema);
+            if (validationResult.valid) {
+                return Promise.resolve(res.Item);
+            } else {
+                return Promise.reject(goalError(goalErrorTypes.badDb, validationResult.errors));
+            }
+        }
+    });
+}
+
+module.exports.getStoredGoalsHTTP = (event, context, cb) => {
+    if (!event.queryStringParameters || !event.queryStringParameters.username || !event.queryStringParameters.token) {
+        jsonResponse(cb, 400, {
+            'error': 'missing username or token param'
+        });
+    } else {
+        getStoredGoals(event.queryStringParameters.username, event.queryStringParameters.token)
+            .then(
+                val => {
+                    console.log(val);
+                    if (val.token === event.queryStringParameters.token) {
+                        jsonResponse(cb, 200, val);
+                    } else {
+                        jsonResponse(cb, 401, {});
+                    }
+                },
+                fail => {
+                    console.log(fail);
+                    if (fail.type === goalErrorTypes.noSuchUser) {
+                        jsonResponse(cb, 404, {});
+                    } else {
+                        jsonResponse(cb, 500, fail);
+                    }
+                });
     }
 };
