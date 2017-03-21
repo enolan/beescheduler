@@ -10,6 +10,14 @@ import {
   Table
 } from 'react-bootstrap';
 
+function getSLSBaseURL () {
+  if (process.env.REACT_APP_LOCAL_SLS) {
+    return "https://localhost:4000";
+  } else {
+    return "https://jc6e81at9k.execute-api.us-west-2.amazonaws.com/dev";
+  }
+}
+
 class App extends React.Component {
   componentWillMount() {
     let foundUsername = null;
@@ -80,7 +88,7 @@ class GoalsTable extends React.Component {
   async getGoalSlugs() {
     let queryParams = {"access_token": this.props.token}
     let resp = await
-      fetch("https://jc6e81at9k.execute-api.us-west-2.amazonaws.com/dev/getGoalSlugs?" +
+      fetch(getSLSBaseURL() + "/getGoalSlugs?" +
             queryString.stringify(queryParams));
     let respArray = await resp.json();
     this.setState({goalslugs: respArray});
