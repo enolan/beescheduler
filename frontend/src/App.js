@@ -144,9 +144,6 @@ class GoalRow extends React.Component {
     </tr>
     );
   }
-  handleChange(e) {
-    this.setState();
-  }
 }
 
 export default App;
