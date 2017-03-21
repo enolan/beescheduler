@@ -103,3 +103,6 @@ custom:
       inMemory: true
       migrate: true
       port: 8000
+  serverless-offline:
+    httpsProtocol: "dev-certs"
+    port: 4000

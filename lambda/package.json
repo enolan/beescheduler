@@ -13,7 +13,7 @@
     "serverless-dynamodb-client": "0.0.2"
   },
   "devDependencies": {
-    "serverless-offline": "^3.11.0",
+    "serverless-offline": "enolan/serverless-offline#1096c84c215e60339785bcad8fa75f451eef23e6",
     "serverless-dynamodb-local": "^0.2.19"
   },
   "scripts": {
