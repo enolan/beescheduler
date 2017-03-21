@@ -9,6 +9,8 @@ const dynamodb = require('serverless-dynamodb-client');
 const dynamoDoc = dynamodb.doc;
 const jsonschema = require('jsonschema');
 
+const userDataSchema = require('./userDataSchema.js').userDataSchema;
+
 const token = "wF7Lo63rZv8qSHxbL-kh";
 
 function beeDateFormat(date) {
@@ -198,32 +200,6 @@ function goalError(type, msg) {
         };
     }
 }
-
-const userDataSchema = {
-    type: "object",
-    id: "http://echonolan.net/beescheduler-schema",
-    properties: {
-        token: {
-            type: "string"
-        },
-        goals: {
-            type: "object",
-            additionalProperties: {
-                type: "array",
-                items: {
-                    type: "number"
-                },
-                minItems: 7,
-                maxItems: 7
-            }
-        },
-        name: {
-            type: "string"
-        }
-    },
-    additionalProperties: false,
-    required: ["name", "token", "goals"]
-};
 
 // Pull a user's goals out of the DB and validate it.
 function getStoredGoals(username) {
