@@ -61,7 +61,7 @@ class App extends React.Component {
       header = <a href={authUrl}>Authorize</a>;
       body = "";
     } else {
-      header = "Sup, " + this.state.username + " ?";
+      header = "Sup, " + this.state.username + "?";
       body = <GoalsTable username={this.state.username} token={this.state.token} />
     }
     return (
