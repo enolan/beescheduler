@@ -131,6 +131,11 @@ class GoalsTable extends React.Component {
   }
 
   render() {
+    const sortedGoals = _.sortBy(_.toPairs(this.state.goals), g => g[0]);
+    const scheduledGoals = _.filter(sortedGoals, g => Array.isArray(g[1]));
+    const unscheduledGoals = _.filter(sortedGoals, g => !Array.isArray(g[1]));
+    const rowify = (x => <GoalRow key={x[0]} slug={x[0]} schedule={x[1]}/>);
+
     return (
       <Table>
         <thead>
@@ -147,7 +152,8 @@ class GoalsTable extends React.Component {
           </tr>
         </thead>
         <tbody>
-            {_.toPairs(this.state.goals).map(x => <GoalRow key={x[0]} slug={x[0]} schedule={x[1]} />)}
+            {scheduledGoals.map(rowify)}
+            {unscheduledGoals.map(rowify)}
         </tbody>
       </Table>
     );
