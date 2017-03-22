@@ -1,8 +1,7 @@
-import React from 'react';
-import './App.css';
-import userDataSchema from './userDataSchema.js';
-import cookie from 'react-cookie';
+import jsonschema from 'jsonschema';
+import _ from 'lodash';
 import queryString from 'query-string';
+import React from 'react';
 import {
   Checkbox,
   Col,
@@ -10,8 +9,10 @@ import {
   Row,
   Table
 } from 'react-bootstrap';
-import * as jsonschema from 'jsonschema';
-import * as _ from 'lodash';
+import cookie from 'react-cookie';
+
+import './App.css';
+import userDataSchema from './userDataSchema.js';
 
 function getSLSBaseURL () {
   if (process.env.REACT_APP_LOCAL_SLS) {
