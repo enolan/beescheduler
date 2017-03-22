@@ -63,8 +63,14 @@ functions:
     handler: handler.getStoredGoalsHTTP
     events:
       - http:
-          path: "/getStoredGoals"
+          path: "/storedGoals"
           method: get
+  setGoalSchedule:
+    handler: handler.setGoalSchedule
+    events:
+      - http:
+          path: "/storedGoals"
+          method: post
 
 #    you can add any of the following events
 #    events:

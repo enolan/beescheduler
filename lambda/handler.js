@@ -252,3 +252,8 @@ module.exports.getStoredGoalsHTTP = (event, context, cb) => {
                 });
     }
 };
+
+module.exports.setGoalSchedule = (event, context, cb) => {
+    console.log(event);
+    jsonResponse(cb, 200, {});
+};

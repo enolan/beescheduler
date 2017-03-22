@@ -106,7 +106,7 @@ class GoalsTable extends React.Component {
   async getStoredGoals() {
     const qstring = queryString.stringify(
       {username: this.props.username, token: this.props.token});
-    let resp = await fetch(getSLSBaseURL() + "/getStoredGoals?" + qstring);
+    let resp = await fetch(getSLSBaseURL() + "/storedGoals?" + qstring);
     // There should be error handling here.
     const respObj = await resp.json();
     const validationResult = jsonschema.validate(respObj, userDataSchema);
