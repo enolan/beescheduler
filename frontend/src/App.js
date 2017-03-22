@@ -111,7 +111,7 @@ class GoalsTable extends React.Component {
     const respObj = await resp.json();
     const validationResult = jsonschema.validate(respObj, userDataSchema);
     if (!validationResult.valid) {
-      throw ("server sent invalid user item: " + validationResult.errors);
+      alert("Server sent invalid data. This should never happen. Try refreshing?");
     } else {
       _.forEach(respObj.goals, (schedule, goalSlug) => {
         if (this.state.goals[goalSlug] === undefined) {
