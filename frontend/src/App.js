@@ -137,7 +137,7 @@ class GoalsTable extends React.Component {
     const rowify = (x => <GoalRow key={x[0]} slug={x[0]} schedule={x[1]}/>);
 
     return (
-      <Table>
+      <Table style={{tableLayout: "fixed"}}>
         <thead>
           <tr>
               {["Goal name",
@@ -148,7 +148,8 @@ class GoalsTable extends React.Component {
                 "Wednesday",
                 "Thursday",
                 "Friday",
-                "Saturday"].map((str, idx) => <th key={idx} scope='col'>{str}</th>)}
+                "Saturday"].map((str, idx) =>
+                  <th key={idx} style={{width: idx < 2 ? "17.5%": "14%"}} scope='col'>{str}</th>)}
           </tr>
         </thead>
         <tbody>
