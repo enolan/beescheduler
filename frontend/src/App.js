@@ -52,12 +52,12 @@ class App extends React.Component {
     let header = {};
     let body = {};
     if (!this.state.username) {
-      let authParams = {
+      const authParams = {
         client_id: "dqlmuqav6goh1cy9bdmpyu6wz",
         redirect_uri: "https://localhost:3000/",
         response_type: "token"
       };
-      let authUrl = "https://www.beeminder.com/apps/authorize?" + queryString.stringify(authParams);
+      const authUrl = "https://www.beeminder.com/apps/authorize?" + queryString.stringify(authParams);
       header = <a href={authUrl}>Authorize</a>;
       body = "";
     } else {
@@ -93,11 +93,11 @@ class GoalsTable extends React.Component {
   }
 
   async getGoalSlugs() {
-    let queryParams = {"access_token": this.props.token}
+    const queryParams = {"access_token": this.props.token}
     let resp = await
       fetch(getSLSBaseURL() + "/getGoalSlugs?" +
             queryString.stringify(queryParams));
-    let respArray = await resp.json();
+    const respArray = await resp.json();
     for (let slug of respArray) {
       this.setState(prevState => _.merge({}, prevState, {goals: {[slug]: "fetching"}}));
     }
@@ -108,8 +108,8 @@ class GoalsTable extends React.Component {
       {username: this.props.username, token: this.props.token});
     let resp = await fetch(getSLSBaseURL() + "/getStoredGoals?" + qstring);
     // There should be error handling here.
-    let respObj = await resp.json();
-    let validationResult = jsonschema.validate(respObj, userDataSchema);
+    const respObj = await resp.json();
+    const validationResult = jsonschema.validate(respObj, userDataSchema);
     if (!validationResult.valid) {
       throw ("server sent invalid user item: " + validationResult.errors);
     } else {
