@@ -1,5 +1,6 @@
 import React from 'react';
 import './App.css';
+import userDataSchema from './userDataSchema.js';
 import cookie from 'react-cookie';
 import queryString from 'query-string';
 import {
@@ -9,6 +10,8 @@ import {
   Row,
   Table
 } from 'react-bootstrap';
+import * as jsonschema from 'jsonschema';
+import * as _ from 'lodash';
 
 function getSLSBaseURL () {
   if (process.env.REACT_APP_LOCAL_SLS) {
@@ -76,13 +79,16 @@ class App extends React.Component {
 class GoalsTable extends React.Component {
   constructor (props) {
     super(props);
-    // Make XHR to Lambda here to get a list of all the user's goals and their
-    // schedules.
     this.state = ({
-      goals: []
+      goals: {}
     });
 
-    this.getGoalSlugs();
+    this.setupTable();
+  }
+
+  async setupTable() {
+    await this.getGoalSlugs();
+    await this.getStoredGoals();
   }
 
   async getGoalSlugs() {
@@ -91,9 +97,36 @@ class GoalsTable extends React.Component {
       fetch(getSLSBaseURL() + "/getGoalSlugs?" +
             queryString.stringify(queryParams));
     let respArray = await resp.json();
-    this.setState({goals: respArray.map(
-      s => {return {slug: s, schedule: "fetching"};})
-    });
+    for (let slug of respArray) {
+      this.setState(prevState => _.merge({}, prevState, {goals: {[slug]: "fetching"}}));
+    }
+  }
+
+  async getStoredGoals() {
+    const qstring = queryString.stringify(
+      {username: this.props.username, token: this.props.token});
+    let resp = await fetch(getSLSBaseURL() + "/getStoredGoals?" + qstring);
+    // There should be error handling here.
+    let respObj = await resp.json();
+    let validationResult = jsonschema.validate(respObj, userDataSchema);
+    if (!validationResult.valid) {
+      throw ("server sent invalid user item: " + validationResult.errors);
+    } else {
+      _.forEach(respObj.goals, (schedule, goalSlug) => {
+        if (this.state.goals[goalSlug] === undefined) {
+          // Cleaning up goals that exist in DynamoDB but not on Beeminder is
+          // the backend's responsibility.
+          return;
+        } else {
+          this.setState(prevState => _.merge({}, prevState, {goals: {[goalSlug]: schedule}}));
+        }
+      });
+      _.forEach(this.state.goals, (schedule, goalSlug) => {
+        if (schedule === "fetching") {
+          this.setState(prevState => _.merge({}, prevState, {goals: {[goalSlug]: "unscheduled"}}));
+        }
+      });
+    }
   }
 
   render() {
@@ -113,7 +146,7 @@ class GoalsTable extends React.Component {
           </tr>
         </thead>
         <tbody>
-            {this.state.goals.map(x => <GoalRow key={x.slug} goal={x} />)}
+            {_.toPairs(this.state.goals).map(x => <GoalRow key={x[0]} slug={x[0]} schedule={x[1]} />)}
         </tbody>
       </Table>
     );
@@ -127,21 +160,21 @@ class GoalRow extends React.Component {
   render() {
     let days;
 
-    if (this.props.goal.schedule === "fetching") {
+    if (this.props.schedule === "fetching") {
       days = Array(7).fill("?");
-    } else if (this.props.goal.schedule === "unscheduled") {
+    } else if (this.props.schedule === "unscheduled") {
       days = Array(7).fill("N/A");
     } else {
-      days = this.props.goal.schedule.map(x => x.toString());
+      days = this.props.schedule.map(x => x.toString());
     }
     let daysEls = days.map((str, idx) => <td key={idx}>{str}</td>);
     return (
       <tr>
         <th scope='row'>
-            {this.props.goal.slug}
+            {this.props.slug}
         </th>
         <td>
-            <Checkbox checked={Array.isArray(this.props.goal.schedule)}/>
+            <Checkbox checked={Array.isArray(this.props.schedule)}/>
         </td>
         {daysEls}
     </tr>
