@@ -5,6 +5,7 @@ import React from 'react';
 import {
   Checkbox,
   Col,
+  FormControl,
   Grid,
   Row,
   Table
@@ -81,7 +82,8 @@ class GoalsTable extends React.Component {
   constructor (props) {
     super(props);
     this.state = ({
-      goals: {}
+      goals: {},
+      dirty: false
     });
 
     this.setupTable();
@@ -130,11 +132,53 @@ class GoalsTable extends React.Component {
     }
   }
 
+  // When one of the "using Beescheduler" checkboxes changes.
+  onCheckboxChange = _.curry((gname, evt) => {
+    this.setState({dirty: true});
+
+    if (Array.isArray(this.state.goals[gname])) {
+      this.setState(prevState =>
+        _.merge({}, prevState, {goals: {[gname]: "unscheduled"}}));
+    } else if (this.state.goals[gname] === "unscheduled") {
+      this.setState(prevState =>
+        _.merge({}, prevState, {goals: {[gname]: Array(7).fill(0)}}));
+    } // If it's not fetched yet, do nothing.
+  });
+
+  // When one of the day rate inputs changes.
+  onDayChange = _.curry((gname, day, evt) => {
+    const setDay = toSet => {
+      this.setState(prevState => {
+        let newSchedule = _.clone(prevState.goals[gname]);
+        newSchedule[day] = toSet;
+        return _.merge({}, prevState, {goals: {[gname]: newSchedule}});
+      })};
+
+    const val = evt.target.value; // This needs to be copied because the event
+                                  // might be recycled before the setState runs.
+    console.log(val);
+
+    this.setState({dirty: true});
+
+    const parsed = parseInt(val, 10);
+    if (!isNaN(parsed)) {
+      setDay(parsed);
+    } else if (val === "") {
+      setDay(0);
+    }
+  });
+
   render() {
     const sortedGoals = _.sortBy(_.toPairs(this.state.goals), g => g[0]);
     const scheduledGoals = _.filter(sortedGoals, g => Array.isArray(g[1]));
     const unscheduledGoals = _.filter(sortedGoals, g => !Array.isArray(g[1]));
-    const rowify = (x => <GoalRow key={x[0]} slug={x[0]} schedule={x[1]}/>);
+    const rowify = (x =>
+      <GoalRow
+          onCheckboxChange={this.onCheckboxChange(x[0])}
+          onDayChange={this.onDayChange(x[0])}
+          key={x[0]}
+          slug={x[0]}
+          schedule={x[1]}/>);
 
     return (
       <Table style={{tableLayout: "fixed"}}>
@@ -165,6 +209,7 @@ class GoalRow extends React.Component {
   constructor(props) {
     super(props);
   }
+
   render() {
     let days;
 
@@ -173,8 +218,14 @@ class GoalRow extends React.Component {
     } else if (this.props.schedule === "unscheduled") {
       days = Array(7).fill("N/A");
     } else {
-      days = this.props.schedule.map(x => x.toString());
+      days = this.props.schedule.map((val, idx) =>
+        <FormControl
+            size={4}
+            style={{width: "auto"}}
+            value={val.toString()}
+            onChange={this.props.onDayChange(idx)}/>);
     }
+
     let daysEls = days.map((str, idx) => <td key={idx}>{str}</td>);
     return (
       <tr>
@@ -182,7 +233,9 @@ class GoalRow extends React.Component {
             {this.props.slug}
         </th>
         <td>
-            <Checkbox checked={Array.isArray(this.props.schedule)}/>
+            <Checkbox
+                checked={Array.isArray(this.props.schedule)}
+                onChange={this.props.onCheckboxChange}/>
         </td>
         {daysEls}
     </tr>
