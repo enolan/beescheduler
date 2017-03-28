@@ -13,8 +13,8 @@
     "serverless-dynamodb-client": "0.0.2"
   },
   "devDependencies": {
-    "serverless-offline": "enolan/serverless-offline#1096c84c215e60339785bcad8fa75f451eef23e6",
-    "serverless-dynamodb-local": "^0.2.19"
+    "serverless-dynamodb-local": "^0.2.19",
+    "serverless-offline": "^3.13.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
