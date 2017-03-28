@@ -14,6 +14,7 @@ import cookie from 'react-cookie';
 
 import './App.css';
 import userDataSchema from './userDataSchema.js';
+import { deepSetState } from './util.js';
 
 function getSLSBaseURL () {
   if (process.env.REACT_APP_LOCAL_SLS) {
@@ -101,7 +102,7 @@ class GoalsTable extends React.Component {
             queryString.stringify(queryParams));
     const respArray = await resp.json();
     for (let slug of respArray) {
-      this.setState(prevState => _.merge({}, prevState, {goals: {[slug]: "fetching"}}));
+      deepSetState(this, {goals: {[slug]: "fetching"}});
     }
   }
 
@@ -121,12 +122,12 @@ class GoalsTable extends React.Component {
           // the backend's responsibility.
           return;
         } else {
-          this.setState(prevState => _.merge({}, prevState, {goals: {[goalSlug]: schedule}}));
+          deepSetState(this, {goals: {[goalSlug]: schedule}});
         }
       });
       _.forEach(this.state.goals, (schedule, goalSlug) => {
         if (schedule === "fetching") {
-          this.setState(prevState => _.merge({}, prevState, {goals: {[goalSlug]: "unscheduled"}}));
+          deepSetState(this, {goals: {[goalSlug]: "unscheduled"}});
         }
       });
     }
@@ -137,11 +138,9 @@ class GoalsTable extends React.Component {
     this.setState({dirty: true});
 
     if (Array.isArray(this.state.goals[gname])) {
-      this.setState(prevState =>
-        _.merge({}, prevState, {goals: {[gname]: "unscheduled"}}));
+      deepSetState(this, {goals: {[gname]: "unscheduled"}});
     } else if (this.state.goals[gname] === "unscheduled") {
-      this.setState(prevState =>
-        _.merge({}, prevState, {goals: {[gname]: Array(7).fill(0)}}));
+      deepSetState(this, {goals: {[gname]: Array(7).fill(0)}});
     } // If it's not fetched yet, do nothing.
   });
 
