@@ -5,7 +5,6 @@ import React from 'react';
 import {
   Checkbox,
   Col,
-  FormControl,
   Grid,
   Row,
   Table
@@ -15,6 +14,7 @@ import cookie from 'react-cookie';
 import './App.css';
 import userDataSchema from './userDataSchema.js';
 import { deepSetState } from './util.js';
+import ValidatedFormControl from './ValidatedFormControl.js';
 
 function getSLSBaseURL () {
   if (process.env.REACT_APP_LOCAL_SLS) {
@@ -146,25 +146,13 @@ class GoalsTable extends React.Component {
 
   // When one of the day rate inputs changes.
   onDayChange = _.curry((gname, day, evt) => {
-    const setDay = toSet => {
-      this.setState(prevState => {
-        let newSchedule = _.clone(prevState.goals[gname]);
-        newSchedule[day] = toSet;
-        return _.merge({}, prevState, {goals: {[gname]: newSchedule}});
-      })};
-
-    const val = evt.target.value; // This needs to be copied because the event
-                                  // might be recycled before the setState runs.
-    console.log(val);
-
+    const newVal = Number(evt.target.value);
+    this.setState(prevState => {
+      let newSchedule = _.clone(prevState.goals[gname]);
+      newSchedule[day] = newVal;
+      return _.merge({}, prevState, {goals: {[gname]: newSchedule}});
+    });
     this.setState({dirty: true});
-
-    const parsed = parseInt(val, 10);
-    if (!isNaN(parsed)) {
-      setDay(parsed);
-    } else if (val === "") {
-      setDay(0);
-    }
   });
 
   render() {
@@ -207,6 +195,7 @@ class GoalsTable extends React.Component {
 class GoalRow extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {validRates: Array(7).fill(true)};
   }
 
   render() {
@@ -218,11 +207,13 @@ class GoalRow extends React.Component {
       days = Array(7).fill("N/A");
     } else {
       days = this.props.schedule.map((val, idx) =>
-        <FormControl
+        <ValidatedFormControl
             size={4}
             style={{width: "auto"}}
-            value={val.toString()}
-            onChange={this.props.onDayChange(idx)}/>);
+            initVal={val.toString()}
+            onChange={this.props.onDayChange(idx)}
+            validate={val => !isNaN(Number(val)) && val !== ""}
+            onValidationStateChange={this.onValidationStateChange(idx)}/>);
     }
 
     let daysEls = days.map((str, idx) => <td key={idx}>{str}</td>);
@@ -240,6 +231,21 @@ class GoalRow extends React.Component {
     </tr>
     );
   }
+
+  onValidationStateChange = _.curry((idx, valid) => {
+    const numValidRates = _.filter(this.state.validRates).length;
+    const wasValid = numValidRates === 7;
+    const isValid = (numValidRates + (valid ? 1 : -1)) === 7;
+
+    this.setState(prevState => {
+      let newValidRates = _.clone(prevState.validRates);
+      newValidRates[idx] = valid;
+      return {validRates: newValidRates};
+    });
+
+    if (wasValid !== isValid) {
+      this.props.onValidationStateChange(isValid);
+    }})
 }
 
 export default App;
