@@ -49,7 +49,8 @@ class App extends React.Component {
     this.state = {
       username: foundUsername,
       token: foundToken,
-      dirty: false
+      dirty: false,
+      formValid: true
     };
   }
   render() {
@@ -67,11 +68,16 @@ class App extends React.Component {
     } else {
       header = "Sup, " + this.state.username + "?";
       body =
-        [<Button bsStyle="primary" disabled={!this.state.dirty}>Save changes</Button>,
+        [<Button
+             bsStyle="primary"
+             disabled={!(this.state.dirty && this.state.formValid)}>
+           Save changes
+         </Button>,
          <GoalsTable
              username={this.state.username}
              token={this.state.token}
-             onDirty={() => this.setState({dirty: true})}/>]
+             onDirty={() => this.setState({dirty: true})}
+             onValidationStateChange={valid => this.setState({formValid: valid})}/>]
       .map((el, idx) => <Row key={idx}><Col md={12}>{el}</Col></Row>);
     }
     return (
@@ -108,7 +114,7 @@ class GoalsTable extends React.Component {
             queryString.stringify(queryParams));
     const respArray = await resp.json();
     for (let slug of respArray) {
-      deepSetState(this, {goals: {[slug]: "fetching"}});
+      deepSetState(this, {goals: {[slug]: {schedule: "fetching", validInput: true}}});
     }
   }
 
@@ -128,12 +134,12 @@ class GoalsTable extends React.Component {
           // the backend's responsibility.
           return;
         } else {
-          deepSetState(this, {goals: {[goalSlug]: schedule}});
+          deepSetState(this, {goals: {[goalSlug]: {schedule: schedule}}});
         }
       });
-      _.forEach(this.state.goals, (schedule, goalSlug) => {
-        if (schedule === "fetching") {
-          deepSetState(this, {goals: {[goalSlug]: "unscheduled"}});
+      _.forEach(this.state.goals, (goal, goalSlug) => {
+        if (goal.schedule === "fetching") {
+          deepSetState(this, {goals: {[goalSlug]: {schedule: "unscheduled"}}});
         }
       });
     }
@@ -144,9 +150,9 @@ class GoalsTable extends React.Component {
     this.props.onDirty();
 
     if (Array.isArray(this.state.goals[gname])) {
-      deepSetState(this, {goals: {[gname]: "unscheduled"}});
-    } else if (this.state.goals[gname] === "unscheduled") {
-      deepSetState(this, {goals: {[gname]: Array(7).fill(0)}});
+      deepSetState(this, {goals: {[gname]: {schedule: "unscheduled"}}});
+    } else if (this.state.goals[gname].schedule === "unscheduled") {
+      deepSetState(this, {goals: {[gname]: {schedule: Array(7).fill(0)}}});
     } // If it's not fetched yet, do nothing.
   });
 
@@ -154,12 +160,23 @@ class GoalsTable extends React.Component {
   onDayChange = _.curry((gname, day, evt) => {
     const newVal = Number(evt.target.value);
     this.setState(prevState => {
-      let newSchedule = _.clone(prevState.goals[gname]);
+      let newSchedule = _.clone(prevState.goals[gname].schedule);
       newSchedule[day] = newVal;
-      return _.merge({}, prevState, {goals: {[gname]: newSchedule}});
+      return _.merge({}, prevState, {goals: {[gname]: {schedule: newSchedule}}});
     });
     this.props.onDirty();
   });
+
+  onValidationStateChange = _.curry((gname, valid) => {
+    let validity = _.mapValues(this.state.goals, g => g.validInput);
+    const wasValid = _.every(validity);
+    validity[gname] = valid;
+    const isValid = _.every(validity);
+    if (wasValid !== isValid) {
+      this.props.onValidationStateChange(isValid);
+    }
+    deepSetState(this, {goals: {[gname]: {validInput: valid}}});
+  })
 
   render() {
     const sortedGoals = _.sortBy(_.toPairs(this.state.goals), g => g[0]);
@@ -169,9 +186,10 @@ class GoalsTable extends React.Component {
       <GoalRow
           onCheckboxChange={this.onCheckboxChange(x[0])}
           onDayChange={this.onDayChange(x[0])}
+          onValidationStateChange={this.onValidationStateChange(x[0])}
           key={x[0]}
           slug={x[0]}
-          schedule={x[1]}/>);
+          schedule={x[1].schedule}/>);
 
     return (
       <Table style={{tableLayout: "fixed"}}>
