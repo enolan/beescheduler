@@ -3,6 +3,7 @@ import _ from 'lodash';
 import queryString from 'query-string';
 import React from 'react';
 import {
+  Button,
   Checkbox,
   Col,
   Grid,
@@ -47,7 +48,8 @@ class App extends React.Component {
     }
     this.state = {
       username: foundUsername,
-      token: foundToken
+      token: foundToken,
+      dirty: false
     };
   }
   render() {
@@ -64,16 +66,21 @@ class App extends React.Component {
       body = "";
     } else {
       header = "Sup, " + this.state.username + "?";
-      body = <GoalsTable username={this.state.username} token={this.state.token} />
+      body =
+        [<Button bsStyle="primary" disabled={!this.state.dirty}>Save changes</Button>,
+         <GoalsTable
+             username={this.state.username}
+             token={this.state.token}
+             onDirty={() => this.setState({dirty: true})}/>]
+      .map((el, idx) => <Row key={idx}><Col md={12}>{el}</Col></Row>);
     }
     return (
       <Grid>
           <Row>
               <Col md={12}>{header}</Col>
           </Row>
-          <Row>
-              <Col md={12}>{body}</Col>
-          </Row>
+          <Row><Col md={12} style={{height: "15px"}}/></Row>
+          {body}
       </Grid>
     )
   }
@@ -84,7 +91,6 @@ class GoalsTable extends React.Component {
     super(props);
     this.state = ({
       goals: {},
-      dirty: false
     });
 
     this.setupTable();
@@ -135,7 +141,7 @@ class GoalsTable extends React.Component {
 
   // When one of the "using Beescheduler" checkboxes changes.
   onCheckboxChange = _.curry((gname, evt) => {
-    this.setState({dirty: true});
+    this.props.onDirty();
 
     if (Array.isArray(this.state.goals[gname])) {
       deepSetState(this, {goals: {[gname]: "unscheduled"}});
@@ -152,7 +158,7 @@ class GoalsTable extends React.Component {
       newSchedule[day] = newVal;
       return _.merge({}, prevState, {goals: {[gname]: newSchedule}});
     });
-    this.setState({dirty: true});
+    this.props.onDirty();
   });
 
   render() {
