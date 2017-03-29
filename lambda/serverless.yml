@@ -109,6 +109,12 @@ custom:
       inMemory: true
       migrate: true
       port: 8000
+      seed: true
+    seed:
+      users:
+        sources:
+          - table: users
+            sources: [./usersSeed.json]
   serverless-offline:
     httpsProtocol: "dev-certs"
     port: 4000

@@ -54,6 +54,12 @@ function getGoalPromise(bm, goalName) {
 }
 
 function getUserInfoPromise(token) {
+    if (process.env.IS_OFFLINE && token === "fakeToken") {
+        return Promise.resolve(
+            {goals:
+             ["profitable","jobhunt","bedroom","survey","cycling","moonshot",
+              "weeklyreview","reading"]});
+    } else {
     return rqpr({
         uri: 'https://www.beeminder.com/api/v1/users/me.json',
         qs: {
@@ -61,6 +67,7 @@ function getUserInfoPromise(token) {
         },
         json: true
     });
+    }
 }
 
 function getRUnitMultiplier(goalInfo) {
