@@ -48,9 +48,7 @@ class App extends React.Component {
     }
     this.state = {
       username: foundUsername,
-      token: foundToken,
-      dirty: false,
-      formValid: true
+      token: foundToken
     };
   }
   render() {
@@ -67,18 +65,9 @@ class App extends React.Component {
       body = "";
     } else {
       header = "Sup, " + this.state.username + "?";
-      body =
-        [<Button
-             bsStyle="primary"
-             disabled={!(this.state.dirty && this.state.formValid)}>
-           Save changes
-         </Button>,
-         <GoalsTable
-             username={this.state.username}
-             token={this.state.token}
-             onDirty={() => this.setState({dirty: true})}
-             onValidationStateChange={valid => this.setState({formValid: valid})}/>]
-      .map((el, idx) => <Row key={idx}><Col md={12}>{el}</Col></Row>);
+      body = (<GoalsTable
+        username={this.state.username}
+        token={this.state.token}/>);
     }
     return (
       <Grid>
@@ -97,6 +86,7 @@ class GoalsTable extends React.Component {
     super(props);
     this.state = ({
       goals: {},
+      dirty: false
     });
 
     this.setupTable();
@@ -147,7 +137,7 @@ class GoalsTable extends React.Component {
 
   // When one of the "using Beescheduler" checkboxes changes.
   onCheckboxChange = _.curry((gname, evt) => {
-    this.props.onDirty();
+    this.setState({dirty: true});
 
     if (Array.isArray(this.state.goals[gname])) {
       deepSetState(this, {goals: {[gname]: {schedule: "unscheduled"}}});
@@ -164,7 +154,7 @@ class GoalsTable extends React.Component {
       newSchedule[day] = newVal;
       return _.merge({}, prevState, {goals: {[gname]: {schedule: newSchedule}}});
     });
-    this.props.onDirty();
+    this.setState({dirty: true});
   });
 
   onValidationStateChange = _.curry((gname, valid) => {
@@ -177,6 +167,8 @@ class GoalsTable extends React.Component {
     }
     deepSetState(this, {goals: {[gname]: {validInput: valid}}});
   })
+
+  allValid = () => _.every(this.state.goals, g => g.validInput)
 
   render() {
     const sortedGoals = _.sortBy(_.toPairs(this.state.goals), g => g[0]);
@@ -192,6 +184,8 @@ class GoalsTable extends React.Component {
           schedule={x[1].schedule}/>);
 
     return (
+      <div>
+      <Button bsStyle="primary" disabled={!(this.state.dirty) || !(this.allValid())}>Save changes</Button>
       <Table style={{tableLayout: "fixed"}}>
         <thead>
           <tr>
@@ -212,6 +206,7 @@ class GoalsTable extends React.Component {
             {unscheduledGoals.map(rowify)}
         </tbody>
       </Table>
+      </div>
     );
   }
 }
