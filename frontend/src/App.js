@@ -185,27 +185,31 @@ class GoalsTable extends React.Component {
 
     return (
       <div>
-      <Button bsStyle="primary" disabled={!(this.state.dirty) || !(this.allValid())}>Save changes</Button>
-      <Table style={{tableLayout: "fixed"}}>
-        <thead>
-          <tr>
-              {["Goal name",
-                "Using Beescheduler",
-                "Sunday",
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday",
-                "Saturday"].map((str, idx) =>
-                  <th key={idx} style={{width: idx < 2 ? "17.5%": "14%"}} scope='col'>{str}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-            {scheduledGoals.map(rowify)}
-            {unscheduledGoals.map(rowify)}
-        </tbody>
-      </Table>
+          <Button
+              bsStyle="primary"
+              disabled={!(this.state.dirty) || !(this.allValid())}>
+              Save changes
+          </Button>
+          <Table style={{tableLayout: "fixed"}}>
+              <thead>
+                  <tr>
+                      {["Goal name",
+                        "Using Beescheduler",
+                        "Sunday",
+                        "Monday",
+                        "Tuesday",
+                        "Wednesday",
+                        "Thursday",
+                        "Friday",
+                        "Saturday"].map((str, idx) =>
+                          <th key={idx} style={{width: idx < 2 ? "17.5%": "14%"}} scope='col'>{str}</th>)}
+                  </tr>
+              </thead>
+              <tbody>
+                  {scheduledGoals.map(rowify)}
+                  {unscheduledGoals.map(rowify)}
+              </tbody>
+          </Table>
       </div>
     );
   }
