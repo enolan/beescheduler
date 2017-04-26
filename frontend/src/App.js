@@ -140,9 +140,10 @@ class GoalsTable extends React.Component {
   onCheckboxChange = _.curry((gname, evt) => {
     this.setState({dirty: true});
 
-    if (Array.isArray(this.state.goals[gname])) {
+    const schedule = this.state.goals[gname].schedule;
+    if (Array.isArray(schedule)) {
       deepSetState(this, {goals: {[gname]: {schedule: "unscheduled"}}});
-    } else if (this.state.goals[gname].schedule === "unscheduled") {
+    } else if (schedule === "unscheduled") {
       deepSetState(this, {goals: {[gname]: {schedule: Array(7).fill(0)}}});
     } // If it's not fetched yet, do nothing.
   });
