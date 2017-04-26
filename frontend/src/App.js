@@ -170,8 +170,8 @@ class GoalsTable extends React.Component {
       const scheduledGoals = filterObjectVals(prevState.goals, g => Array.isArray(g.schedule));
       console.log(scheduledGoals);
       const toStore =
-        {token: this.token,
-         name: this.username,
+        {token: this.props.token,
+         name: this.props.username,
          goals: _.mapValues(scheduledGoals, g => g.schedule)
         };
       const validationResult = jsonschema.validate(toStore, userDataSchema);
