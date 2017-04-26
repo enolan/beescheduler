@@ -157,14 +157,8 @@ class GoalsTable extends React.Component {
     this.setState({dirty: true});
   });
 
+  // When one of rate fields changes validation state.
   onValidationStateChange = _.curry((gname, valid) => {
-    let validity = _.mapValues(this.state.goals, g => g.validInput);
-    const wasValid = _.every(validity);
-    validity[gname] = valid;
-    const isValid = _.every(validity);
-    if (wasValid !== isValid) {
-      this.props.onValidationStateChange(isValid);
-    }
     deepSetState(this, {goals: {[gname]: {validInput: valid}}});
   })
 
