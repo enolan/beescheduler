@@ -86,7 +86,8 @@ class GoalsTable extends React.Component {
     super(props);
     this.state = ({
       goals: {},
-      dirty: false
+      dirty: false,
+      saving: false
     });
 
     this.setupTable();
@@ -164,6 +165,36 @@ class GoalsTable extends React.Component {
 
   allValid = () => _.every(this.state.goals, g => g.validInput)
 
+  saveSchedule() {
+    this.setState(prevState => {
+      const scheduledGoals = filterObjectVals(prevState.goals, g => Array.isArray(g.schedule));
+      console.log(scheduledGoals);
+      const toStore =
+        {token: this.token,
+         name: this.username,
+         goals: _.mapValues(scheduledGoals, g => g.schedule)
+        };
+      const validationResult = jsonschema.validate(toStore, userDataSchema);
+      if (validationResult.valid) {
+        fetch(
+          getSLSBaseURL() + "/storedGoals",
+          {method: "POST", body: JSON.stringify(toStore)})
+          .then(
+            resp => {if (resp.ok) {
+              this.setState({saving: false});
+            } else {
+              //FIXME
+              alert("saving failed", resp);
+            }},
+            err => alert("saving failed", err))
+      }
+      let newState = _.clone(prevState);
+      newState.saving = true;
+      newState.dirty = false;
+      return newState;
+    });
+  }
+
   render() {
     const sortedGoals = _.sortBy(_.toPairs(this.state.goals), g => g[0]);
     const scheduledGoals = _.filter(sortedGoals, g => Array.isArray(g[1]));
@@ -175,14 +206,16 @@ class GoalsTable extends React.Component {
           onValidationStateChange={this.onValidationStateChange(x[0])}
           key={x[0]}
           slug={x[0]}
-          schedule={x[1].schedule}/>);
+          schedule={x[1].schedule}
+          disabled={this.state.saving}/>);
 
     return (
       <div>
           <Button
               bsStyle="primary"
-              disabled={!(this.state.dirty) || !(this.allValid())}>
-              Save changes
+              disabled={!(this.state.dirty) || !(this.allValid()) || this.state.saving}
+              onClick={this.saveSchedule.bind(this)}>
+              {this.state.saving ? "Saving..." : "Save changes"}
           </Button>
           <Table style={{tableLayout: "fixed"}}>
               <thead>
@@ -230,7 +263,8 @@ class GoalRow extends React.Component {
             initVal={val.toString()}
             onChange={this.props.onDayChange(idx)}
             validate={val => !isNaN(Number(val)) && val !== ""}
-            onValidationStateChange={this.onValidationStateChange(idx)}/>);
+            onValidationStateChange={this.onValidationStateChange(idx)}
+            disabled={this.props.disabled}/>);
     }
 
     let daysEls = days.map((str, idx) => <td key={idx}>{str}</td>);
@@ -242,7 +276,8 @@ class GoalRow extends React.Component {
         <td>
             <Checkbox
                 checked={Array.isArray(this.props.schedule)}
-                onChange={this.props.onCheckboxChange}/>
+                onChange={this.props.onCheckboxChange}
+                disabled={this.props.disabled}/>
         </td>
         {daysEls}
     </tr>
@@ -266,3 +301,13 @@ class GoalRow extends React.Component {
 }
 
 export default App;
+
+function filterObjectVals(obj, f) {
+  let res = {}
+  _.forOwn(obj, (val, key) => {
+    if (f(val)) {
+      res[key] = val;
+    }
+  })
+  return res;
+}

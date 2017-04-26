@@ -12,7 +12,8 @@ class ValidatedFormControl extends React.Component {
       size={this.props.size}
       style={_.merge({}, this.props.style, !this.state.isValid ? {color: "red", borderColor: "red"} : {})}
       value={this.state.currentVal}
-      onChange={this.onChange}/>);
+      onChange={this.onChange}
+      disabled={this.props.disabled}/>);
   }
   onChange = evt => {
     this.setState({currentVal: evt.target.value});
