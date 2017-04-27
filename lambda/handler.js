@@ -179,7 +179,12 @@ module.exports.getGoalSlugs = (event, context, cb) => {
                     jsonResponse(cb, 200, uinfo.goals);
                 }),
                 (err => {
-                    jsonResponse(cb, 500, err);
+                    if (err.statusCode === 401) {
+                        jsonResponse(cb, 401, "Beeminder API returned 401");
+                    } else {
+                        console.log(err);
+                        jsonResponse(cb, 500, "");
+                    }
                 }));
         return;
     }
