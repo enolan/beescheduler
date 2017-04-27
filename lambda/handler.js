@@ -261,6 +261,25 @@ module.exports.getStoredGoalsHTTP = (event, context, cb) => {
 };
 
 module.exports.setGoalSchedule = (event, context, cb) => {
-    console.log(event);
-    jsonResponse(cb, 200, {});
+    // FIXME: We need to validate the token against the Beeminder API!
+    try {
+        const bodyParsed = JSON.parse(event.body);
+        const validationResult = jsonschema.validate(bodyParsed, userDataSchema);
+        if (validationResult.valid) {
+            dynamoDoc.put(
+                {TableName: 'users',
+                 Item: bodyParsed
+                }).promise().then(
+                    dynamoDbRes => jsonResponse(cb, 200, "ok"),
+                    err => jsonResponse(cb, 500, "DynamoDB error"));
+        } else {
+            jsonResponse(cb, 400, validationResult.errors);
+        }
+    } catch (ex) {
+        if (ex instanceof SyntaxError) {
+            jsonResponse(cb, 400, "post body not valid JSON: " + ex.message);
+        } else {
+            throw ex;
+        }
+    }
 };
