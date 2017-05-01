@@ -288,3 +288,7 @@ module.exports.setGoalSchedule = (event, context, cb) => {
         }
     }
 };
+
+// For a bug report against Firefox...
+
+module.exports.jsonstring = (event, context, cb) => jsonResponse(cb, 200, "hello");

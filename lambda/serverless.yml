@@ -71,6 +71,12 @@ functions:
       - http:
           path: "/storedGoals"
           method: post
+  jsonstring:
+    handler: handler.jsonstring
+    events:
+      - http:
+          path: "/jsonstring"
+          method: get
 
 #    you can add any of the following events
 #    events:
