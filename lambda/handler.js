@@ -266,17 +266,47 @@ module.exports.getStoredGoalsHTTP = (event, context, cb) => {
 };
 
 module.exports.setGoalSchedule = (event, context, cb) => {
-    // FIXME: We need to validate the token against the Beeminder API!
     try {
         const bodyParsed = JSON.parse(event.body);
         const validationResult = jsonschema.validate(bodyParsed, userDataSchema);
+        const putUserInfo = () => dynamoDoc.put(
+            {TableName: 'users',
+             Item: bodyParsed
+            }).promise().then(
+                dynamoDbRes => jsonResponse(cb, 200, "ok"),
+                err => jsonResponse(cb, 500, "DynamoDB error"));
+
+        // If the token sent matches our database, we can assume it's good.
+        const tokenValidatedInDDB = () =>
+                  getStoredGoals(bodyParsed.name).then(
+                      record => record.token === bodyParsed.token,
+                      err => false);
+
         if (validationResult.valid) {
-            dynamoDoc.put(
-                {TableName: 'users',
-                 Item: bodyParsed
-                }).promise().then(
-                    dynamoDbRes => jsonResponse(cb, 200, "ok"),
-                    err => jsonResponse(cb, 500, "DynamoDB error"));
+            tokenValidatedInDDB().then(
+                validated => {
+                    if (validated) {
+                        return putUserInfo();
+                    } else {
+                        return getUserInfoPromise(bodyParsed.token).then(
+                            uinfo => {
+                                if (uinfo.username === bodyParsed.name) {
+                                    return putUserInfo();
+                                } else {
+                                    jsonResponse(cb, 401, "Username returned by Beeminder doesn't match passed");
+                                    return null; // Get jshint to chill.
+                                }
+                            },
+                            err => {
+                                if (err.statusCode === 401) {
+                                    jsonResponse(cb, 401, "Beeminder API returned 401");
+                                } else {
+                                    jsonResponse(cb, 500, "Beeminder API error in getUserInfoPromise");
+                                }
+                            });
+                    }
+                }
+            );
         } else {
             jsonResponse(cb, 400, validationResult.errors);
         }
