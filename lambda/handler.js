@@ -276,18 +276,20 @@ module.exports.setGoalSchedule = (event, context, cb) => {
                 dynamoDbRes => jsonResponse(cb, 200, "ok"),
                 err => jsonResponse(cb, 500, "DynamoDB error"));
 
-        // If the token sent matches our database, we can assume it's good.
         const tokenValidatedInDDB = () =>
                   getStoredGoals(bodyParsed.name).then(
                       record => record.token === bodyParsed.token,
                       err => false);
 
         if (validationResult.valid) {
+            // If the token sent matches our database, we can assume it's good.
             tokenValidatedInDDB().then(
                 validated => {
                     if (validated) {
                         return putUserInfo();
                     } else {
+                        // They might've sent a token that is valid for their
+                        // account but is different from the one we have stored.
                         return getUserInfoPromise(bodyParsed.token).then(
                             uinfo => {
                                 if (uinfo.username === bodyParsed.name) {
