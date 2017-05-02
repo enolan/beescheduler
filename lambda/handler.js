@@ -244,15 +244,37 @@ module.exports.getStoredGoalsHTTP = (event, context, cb) => {
             'error': 'missing username or token param'
         });
     } else {
-        getStoredGoals(
-            event.queryStringParameters.username,
-            event.queryStringParameters.token)
+        getStoredGoals(event.queryStringParameters.username)
             .then(
                 val => {
                     if (val.token === event.queryStringParameters.token) {
                         jsonResponse(cb, 200, val);
+                        return null;
                     } else {
-                        jsonResponse(cb, 401, {});
+                        // The token they sent doesn't match our database, but
+                        // it might still be valid.
+                        return getUserInfoPromise(event.queryStringParameters.token).then(
+                            uinfo => {
+                                if (uinfo.username === event.queryStringParameters.username) {
+                                    // If the token is valid, for the right username, save it
+                                    // back in the DB.
+                                    val.token = event.queryStringParameters.token;
+                                    return dynamoDoc.put({
+                                        TableName: 'users',
+                                        Item: val
+                                    }).promise().then(res => jsonResponse(cb, 200, val));
+                                } else {
+                                    jsonResponse(cb, 401,
+                                                 "Username returned by Beeminder for token, doesn't match passed");
+                                    return null;
+                                }
+                            },
+                            err => {
+                                if (err.statusCode === 401) {
+                                    jsonResponse(cb, 401, "Beeminder returned 401");
+                                } else {
+                                    jsonResponse(cb, 500, err);
+                                }});
                     }
                 },
                 fail => {
