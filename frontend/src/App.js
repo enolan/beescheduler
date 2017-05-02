@@ -47,6 +47,12 @@ class App extends React.Component {
       token: foundToken
     };
   }
+
+  logout = () => {
+    localStorage.clear();
+    this.setState({username: null, token: null})
+  };
+
   render() {
     let header = {};
     let body = {};
@@ -57,19 +63,21 @@ class App extends React.Component {
         response_type: "token"
       };
       const authUrl = "https://www.beeminder.com/apps/authorize?" + queryString.stringify(authParams);
-      header = <a href={authUrl}>Authorize</a>;
+      header = <Row><Col md={12}><a href={authUrl}>Authorize</a></Col></Row>;
       body = "";
     } else {
-      header = "Sup, " + this.state.username + "?";
+      header =
+        <Row>
+          <Col md={12}>{"Sup, " + this.state.username + "?"}</Col>
+          <Col md={12}><Button onClick={this.logout}>Log out</Button></Col>
+        </Row>;
       body = (<GoalsTable
         username={this.state.username}
         token={this.state.token}/>);
     }
     return (
       <Grid>
-          <Row>
-              <Col md={12}>{header}</Col>
-          </Row>
+          {header}
           <Row><Col md={12} style={{height: "15px"}}/></Row>
           {body}
       </Grid>
