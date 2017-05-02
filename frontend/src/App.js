@@ -31,20 +31,16 @@ class App extends React.Component {
     let foundToken = null;
 
     const qvars = queryString.parse(location.search);
-    const cookieUsername = cookie.load('username');
-    const cookieToken = cookie.load('token');
+    const storedUsername = localStorage.getItem('username');
+    const storedToken = localStorage.getItem('token');
     if (qvars.access_token && qvars.username) {
       foundUsername = qvars.username;
       foundToken = qvars.access_token;
-      cookie.save('username', foundUsername, {
-        secure: true
-      });
-      cookie.save('token', foundToken, {
-        secure: true
-      });
-    } else if (cookieUsername !== undefined && cookieToken !== undefined) {
-      foundUsername = cookieUsername;
-      foundToken = cookieToken;
+      localStorage.setItem('username', foundUsername);
+      localStorage.setItem('token', foundToken);
+    } else if (storedUsername !== null && storedToken !== null) {
+      foundUsername = storedUsername;
+      foundToken = storedToken;
     }
     this.state = {
       username: foundUsername,
