@@ -173,7 +173,6 @@ class GoalsTable extends React.Component {
   saveSchedule() {
     this.setState(prevState => {
       const scheduledGoals = filterObjectVals(prevState.goals, g => Array.isArray(g.schedule));
-      console.log(scheduledGoals);
       const toStore =
         {token: this.props.token,
          name: this.props.username,
