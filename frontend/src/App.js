@@ -10,7 +10,6 @@ import {
   Row,
   Table
 } from 'react-bootstrap';
-import cookie from 'react-cookie';
 
 import './App.css';
 import userDataSchema from './userDataSchema.js';
