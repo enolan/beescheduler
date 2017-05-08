@@ -1,10 +1,8 @@
 'use strict';
 
-const beeminder = require('beeminder');
 const rqpr = require('request-promise-native');
 const moment = require('moment');
 const _ = require('lodash/fp');
-const querystring = require('querystring');
 const dynamodb = require('serverless-dynamodb-client');
 const dynamoDoc = dynamodb.doc;
 const jsonschema = require('jsonschema');

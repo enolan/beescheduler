@@ -4,7 +4,6 @@
   "description": "",
   "main": "handler.js",
   "dependencies": {
-    "beeminder": "^1.5.2",
     "jsonschema": "^1.1.1",
     "lodash": "^4.16.4",
     "moment": "^2.15.1",
