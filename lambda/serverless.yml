@@ -30,6 +30,8 @@ provider:
     - Effect: "Allow"
       Action: "lambda:InvokeFunction"
       Resource: "arn:aws:lambda:*:*:function:*"
+  environment:
+    SLS_STAGE: ${self:provider.stage}
 
 # you can overwrite defaults here
 #  stage: dev

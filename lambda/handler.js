@@ -340,7 +340,7 @@ module.exports.setsched = (username, context, cb) => {
 const queueSetSched = uname => {
     console.log("queueing scheduling for: " + uname);
     return lambda.invoke({
-        FunctionName: 'beescheduler-dev-setsched',
+        FunctionName: 'beescheduler-' + process.env.SLS_STAGE + '-setsched',
         InvocationType: 'Event',
         Payload: JSON.stringify(uname)
     }).promise();
