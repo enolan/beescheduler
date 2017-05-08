@@ -11,21 +11,19 @@ const jsonschema = require('jsonschema');
 
 const userDataSchema = require('./userDataSchema.js').userDataSchema;
 
-const token = "wF7Lo63rZv8qSHxbL-kh";
-
 function beeDateFormat(date) {
     return date.format("YYYY-MM-DD", date);
 }
 
-function setRoad(goalName, roadAll) {
+function setRoad(goalName, roadAll, token) {
     console.log("setting " + goalName);
     console.log(roadAll);
     let opts = {
-        uri: 'https://www.beeminder.com/api/v1/users/enolan/goals/' + goalName + '.json',
+        uri: 'https://www.beeminder.com/api/v1/users/me/goals/' + goalName + '.json',
         method: 'PUT',
         json: true,
         body: {
-            'auth_token': token,
+            'access_token': token,
             'roadall': roadAll
         }
     };
@@ -41,16 +39,11 @@ function setRoad(goalName, roadAll) {
     }
 }
 
-function getGoalPromise(bm, goalName) {
-    return new Promise((resolve, reject) => {
-        bm.getGoal(goalName, function(err, res) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(res);
-            }
-        });
-    });
+function getGoalPromise(token, goalName) {
+    return rqpr({
+        uri: 'https://www.beeminder.com/api/v1/users/me/goals/' + goalName + '.json',
+        qs: {'access_token': token},
+        json: true});
 }
 
 function getUserInfoPromise(token) {
@@ -92,7 +85,7 @@ function getRUnitMultiplier(goalInfo) {
     return res;
 }
 
-function scheduleGoal(bm, goalName, schedule) {
+function scheduleGoal(token, goalName, schedule) {
     console.log("scheduleGoal " + goalName + " " + schedule);
     let oneWeekOut = moment().utcOffset(-4).set({
         'hour': 12,
@@ -100,7 +93,7 @@ function scheduleGoal(bm, goalName, schedule) {
         'second': 0,
         'millisecond': 0
     }).add(7, 'days');
-    return getGoalPromise(bm, goalName).then(goalInfo => {
+    return getGoalPromise(token, goalName).then(goalInfo => {
         console.log(goalInfo);
         let rUnitMultiplier = getRUnitMultiplier(goalInfo);
         let truncatedRoad =
@@ -124,35 +117,9 @@ function scheduleGoal(bm, goalName, schedule) {
         console.log("New segment:");
         console.log(newSegment);
         let newRoadall = truncatedRoad.concat(newSegment);
-        return setRoad(goalName, newRoadall);
+        return setRoad(goalName, newRoadall, token);
     });
 }
-// Sunday, Monday...
-
-const sched = {
-    //    idris:    [0, 7, 7, 6, 0, 0, 0],
-    profitable: [0, 5, 5, 5, 0, 0, 0],
-    survey:     [0, 0, 0, 0, 5, 1, 0],
-    moonshot:   [0, 0, 0, 0, 0, 4, 0]
-};
-// const sched = {
-//     test: [1, 2, 5, 0, 9, 0.3, 4],
-//     testb: [5, 4, 11, 3, 8, 0, 2],
-//     testc: [0, 0, 0, 6, 0, 0, 2]
-
-// };
-
-module.exports.setsched = (event, context, cb) => {
-    let bm = beeminder(token);
-    console.log(sched);
-    Promise.all(_.map(ent => scheduleGoal(bm, ent[0], ent[1]), _.toPairs(sched))).then(
-        val => {
-            cb(null, val);
-        },
-        err => {
-            cb(err, null);
-        });
-};
 
 function jsonResponse(cb, status, data) {
     cb(null, {
@@ -346,3 +313,17 @@ module.exports.setGoalSchedule = (event, context, cb) => {
 // For a bug report against Firefox...
 
 module.exports.jsonstring = (event, context, cb) => jsonResponse(cb, 200, "hello");
+
+function setsched(username) {
+    return getStoredGoals(username).then(
+        res => {
+            return Promise.all(_.map(ent => scheduleGoal(res.token, ent[0], ent[1]), _.toPairs(res.goals)));
+        });
+}
+
+module.exports.setsched = (username, context, cb) => {
+    if (typeof username === "string"){
+        console.log(username);
+        setsched(username).then(res => cb(null,res),err => cb(err,null));
+    }
+};

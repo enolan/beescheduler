@@ -51,8 +51,6 @@ package:
 functions:
   setsched:
     handler: handler.setsched
-    events:
-      - schedule: rate(1 day)
   getGoalSlugs:
     handler: handler.getGoalSlugs
     events:
