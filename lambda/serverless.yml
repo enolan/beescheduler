@@ -22,8 +22,14 @@ provider:
   timeout: 10
   iamRoleStatements:
     - Effect: "Allow"
-      Action: "dynamodb:GetItem"
+      Action:
+        - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
+        - "dynamodb:Scan"
       Resource: "arn:aws:dynamodb:*:*:table/users"
+    - Effect: "Allow"
+      Action: "lambda:InvokeFunction"
+      Resource: "arn:aws:lambda:*:*:function:*"
 
 # you can overwrite defaults here
 #  stage: dev
@@ -51,6 +57,10 @@ package:
 functions:
   setsched:
     handler: handler.setsched
+  queueSetScheds:
+    handler: handler.queueSetScheds
+    events:
+      - schedule: rate(1 day)
   getGoalSlugs:
     handler: handler.getGoalSlugs
     events:

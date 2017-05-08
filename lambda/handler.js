@@ -6,6 +6,8 @@ const _ = require('lodash/fp');
 const dynamodb = require('serverless-dynamodb-client');
 const dynamoDoc = dynamodb.doc;
 const jsonschema = require('jsonschema');
+const aws = require('aws-sdk');
+const lambda = new aws.Lambda();
 
 const userDataSchema = require('./userDataSchema.js').userDataSchema;
 
@@ -321,7 +323,43 @@ function setsched(username) {
 
 module.exports.setsched = (username, context, cb) => {
     if (typeof username === "string"){
-        console.log(username);
-        setsched(username).then(res => cb(null,res),err => cb(err,null));
+        console.log("scheduling " + username);
+        setsched(username).then(
+            res => cb(null, res),
+            err => {
+                // FIXME: This should disable accounts with now-invalid
+                // credentials.
+                console.log(err);
+                cb(err, null);
+            });
+    } else {
+        cb("setsched got a non-string parameter!", null);
     }
+};
+
+const queueSetSched = uname => {
+    console.log("queueing scheduling for: " + uname);
+    return lambda.invoke({
+        FunctionName: 'beescheduler-dev-setsched',
+        InvocationType: 'Event',
+        Payload: JSON.stringify(uname)
+    }).promise();
+};
+
+module.exports.queueSetScheds = (evt, ctx, cb) => {
+    dynamoDoc.scan({
+        TableName: 'users',
+        Select: "SPECIFIC_ATTRIBUTES",
+        ProjectionExpression: "#n", // 'name' is a reserved word in DDB
+        ExpressionAttributeNames: {'#n': 'name'}
+    }).promise().then(
+        res => {
+            if (res.LastEvaluatedKey !== undefined) {
+                cb("Scan needed more than 1 page of results! Echo, go implement this.", null);
+            } else {
+                Promise.all(_.map(item => queueSetSched(item.name), res.Items)).then(
+                    res => cb(null, res),
+                    err => cb(err, null));
+            }
+        }, err => cb(err, null));
 };
