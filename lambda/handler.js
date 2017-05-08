@@ -275,6 +275,7 @@ module.exports.setGoalSchedule = (event, context, cb) => {
             tokenValidatedInDDB().then(
                 validated => {
                     if (validated) {
+                        queueSetSched(bodyParsed.name);
                         return putUserInfo();
                     } else {
                         // They might've sent a token that is valid for their
@@ -282,6 +283,7 @@ module.exports.setGoalSchedule = (event, context, cb) => {
                         return getUserInfoPromise(bodyParsed.token).then(
                             uinfo => {
                                 if (uinfo.username === bodyParsed.name) {
+                                    queueSetSched(bodyParsed.name);
                                     return putUserInfo();
                                 } else {
                                     jsonResponse(cb, 401, "Username returned by Beeminder doesn't match passed");
