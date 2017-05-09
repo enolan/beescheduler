@@ -5,9 +5,11 @@ import React from 'react';
 import Button from 'react-bootstrap/lib/Button';
 import Checkbox from 'react-bootstrap/lib/Checkbox';
 import Col from 'react-bootstrap/lib/Col';
+import Collapse from 'react-bootstrap/lib/Collapse';
 import Grid from 'react-bootstrap/lib/Grid';
 import Row from 'react-bootstrap/lib/Row';
 import Table from 'react-bootstrap/lib/Table'
+import Well from 'react-bootstrap/lib/Well';
 
 import './App.css';
 import userDataSchema from './userDataSchema.js';
@@ -81,9 +83,10 @@ class App extends React.Component {
       body = "";
     } else {
       header =
-        [<Row><Col md={12}>{"Sup, " + this.state.username + "?"}</Col></Row>,
-         <Row><Col md={12}><Button onClick={this.logout}>Log out</Button></Col></Row>
-        ];
+        [<Col md={12}>{"Sup, " + this.state.username + "?"}</Col>,
+         <Col md={12}><Button onClick={this.logout}>Log out</Button></Col>,
+         <Col md={12}><HelpBox/></Col>
+        ].map((val, idx) => <Row key={idx}>{val}</Row>);
       body = (<GoalsTable
         username={this.state.username}
         token={this.state.token}
@@ -332,4 +335,42 @@ function filterObjectVals(obj, f) {
     }
   })
   return res;
+}
+
+class HelpBox extends React.Component {
+  constructor(props) {
+    super(props);
+    try {
+      let wantsHelp = JSON.parse(localStorage.getItem("wantsHelp"));
+      if (typeof wantsHelp === "boolean") {
+        this.state = {wantsHelp: wantsHelp};
+      } else {
+        localStorage.setItem("wantsHelp", JSON.stringify(true));
+        this.state = {wantsHelp: true};
+      }
+    } catch (ex) {
+      if (ex instanceof SyntaxError) {
+        console.log("parsing wantsHelp: ", ex);
+        localStorage.setItem("wantsHelp", true);
+        this.state = {wantsHelp: true};
+      }
+    }
+  }
+
+  toggleWantHelp = () => {
+    localStorage.setItem("wantsHelp", JSON.stringify(!this.state.wantsHelp));
+    this.setState({wantsHelp: !this.state.wantsHelp});
+  }
+  render() {
+    return (
+      <div>
+          <Button onClick={this.toggleWantHelp}>
+              {this.state.wantsHelp ? "Hide help" : "Show help"}
+          </Button>
+          <Collapse in={this.state.wantsHelp}>
+              <div><Well>{"Help text goes here"}</Well></div>
+          </Collapse>
+      </div>
+    );
+  }
 }
