@@ -368,7 +368,20 @@ class HelpBox extends React.Component {
               {this.state.wantsHelp ? "Hide help" : "Show help"}
           </Button>
           <Collapse in={this.state.wantsHelp}>
-              <div><Well>{"Help text goes here"}</Well></div>
+              <div><Well>
+                  <p>
+                      Beescheduler lets you schedule different rates for your
+                      Beeminder goals based on the days of the week. For example,
+                      you could write 500 words on Monday, Tuesday and Wednesday and
+                      take the rest of the week off. Or go for short runs every weekday
+                      and longer ones on the weekends. Or whatever else you can think of.
+                  </p>
+                  <p>
+                      The table below shows your current Beeminder goals. To use
+                      Beescheduler for one of them, click on the checkbox under
+                      "Using Beescheduler" and fill in rates for each day of the week.
+                  </p>
+              </Well></div>
           </Collapse>
       </div>
     );
