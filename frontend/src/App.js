@@ -45,7 +45,8 @@ class App extends React.Component {
     }
     this.state = {
       username: foundUsername,
-      token: foundToken
+      token: foundToken,
+      authFailed: false
     };
   }
 
@@ -64,17 +65,19 @@ class App extends React.Component {
     }
   }
 
+  onAuthFail = () => this.setState({authFailed: true});
+
   render() {
     let header = {};
     let body = {};
-    if (!this.state.username) {
+    if (!this.state.username || this.state.authFailed) {
       const authParams = {
         client_id: this.client_id(),
         redirect_uri: document.location,
         response_type: "token"
       };
       const authUrl = "https://www.beeminder.com/apps/authorize?" + queryString.stringify(authParams);
-      header = <Row><Col md={12}><a href={authUrl}>Authorize</a></Col></Row>;
+      header = <Row><Col md={12}><a href={authUrl}>{this.state.authFailed ? "Authorization failed, try again" : "Authorize"}</a></Col></Row>;
       body = "";
     } else {
       header =
@@ -84,7 +87,8 @@ class App extends React.Component {
         </Row>;
       body = (<GoalsTable
         username={this.state.username}
-        token={this.state.token}/>);
+        token={this.state.token}
+        onAuthFail={this.onAuthFail}/>);
     }
     return (
       <Grid>
@@ -118,9 +122,13 @@ class GoalsTable extends React.Component {
     let resp = await
       fetch(getSLSBaseURL() + "/getGoalSlugs?" +
             queryString.stringify(queryParams));
-    const respArray = await resp.json();
-    for (let slug of respArray) {
-      deepSetState(this, {goals: {[slug]: {schedule: "fetching", validInput: true}}});
+    if (resp.ok) {
+      const respArray = await resp.json();
+      for (let slug of respArray) {
+        deepSetState(this, {goals: {[slug]: {schedule: "fetching", validInput: true}}});
+      }
+    } else if (resp.status === 401) {
+      this.props.onAuthFail();
     }
   }
 
