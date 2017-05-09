@@ -26,12 +26,12 @@ provider:
         - "dynamodb:GetItem"
         - "dynamodb:PutItem"
         - "dynamodb:Scan"
-      Resource: "arn:aws:dynamodb:*:*:table/users"
+      Resource: "arn:aws:dynamodb:*:*:table/users-${self:custom.stage}"
     - Effect: "Allow"
       Action: "lambda:InvokeFunction"
       Resource: "arn:aws:lambda:*:*:function:*"
   environment:
-    SLS_STAGE: ${self:provider.stage}
+    SLS_STAGE: ${self:custom.stage}
 
 # you can overwrite defaults here
 #  stage: dev
@@ -103,7 +103,7 @@ resources:
     UsersTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: users
+        TableName: users-${self:custom.stage}
         AttributeDefinitions:
           # It's schemaless, so the only thing that needs to be specified here
           # is the partition key.
@@ -134,3 +134,4 @@ custom:
   serverless-offline:
     httpsProtocol: "dev-certs"
     port: 4000
+  stage: ${opt:stage, self:provider.stage}

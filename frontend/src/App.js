@@ -18,10 +18,10 @@ function getSLSBaseURL () {
   if (process.env.REACT_APP_LOCAL_SLS) {
     return "https://localhost:4000";
   } else {
-    if (process.env.REACT_APP_SLS_STAGE !== undefined) {
-      return "https://jc6e81at9k.execute-api.us-west-2.amazonaws.com/" + process.env.REACT_APP_SLS_STAGE;
+    if (process.env.REACT_APP_SLS_BASEURL !== undefined) {
+      return process.env.REACT_APP_SLS_BASEURL;
     } else {
-      alert("SLS stage not set!");
+      alert("SLS base url not set!");
     }
   }
 }

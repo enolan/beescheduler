@@ -11,6 +11,8 @@ const lambda = new aws.Lambda();
 
 const userDataSchema = require('./userDataSchema.js').userDataSchema;
 
+const usersTableName = 'users-' + process.env.SLS_STAGE;
+
 function beeDateFormat(date) {
     return date.format("YYYY-MM-DD", date);
 }
@@ -183,7 +185,7 @@ function goalError(type, msg) {
 // Pull a user's goals out of the DB and validate it.
 function getStoredGoals(username) {
     return dynamoDoc.get({
-        TableName: 'users',
+        TableName: usersTableName,
         Key: {
             name: username
         }
@@ -227,7 +229,7 @@ module.exports.getStoredGoalsHTTP = (event, context, cb) => {
                                     // back in the DB.
                                     val.token = event.queryStringParameters.token;
                                     return dynamoDoc.put({
-                                        TableName: 'users',
+                                        TableName: usersTableName,
                                         Item: val
                                     }).promise().then(res => jsonResponse(cb, 200, val));
                                 } else {
@@ -259,7 +261,7 @@ module.exports.setGoalSchedule = (event, context, cb) => {
         const bodyParsed = JSON.parse(event.body);
         const validationResult = jsonschema.validate(bodyParsed, userDataSchema);
         const putUserInfo = () => dynamoDoc.put(
-            {TableName: 'users',
+            {TableName: usersTableName,
              Item: bodyParsed
             }).promise().then(
                 dynamoDbRes => jsonResponse(cb, 200, "ok"),
@@ -350,7 +352,7 @@ const queueSetSched = uname => {
 
 module.exports.queueSetScheds = (evt, ctx, cb) => {
     dynamoDoc.scan({
-        TableName: 'users',
+        TableName: usersTableName,
         Select: "SPECIFIC_ATTRIBUTES",
         ProjectionExpression: "#n", // 'name' is a reserved word in DDB
         ExpressionAttributeNames: {'#n': 'name'}
