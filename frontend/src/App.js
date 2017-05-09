@@ -56,13 +56,23 @@ class App extends React.Component {
     this.setState({username: null, token: null})
   };
 
+  client_id() {
+    if (document.location.href.match(/localhost/) !== null) {
+      return "dqlmuqav6goh1cy9bdmpyu6wz";
+    } else if (document.location.href.match(/s3-website/) !== null) {
+      return "atfphg2m06sjkavmodmwxxlfp";
+    } else {
+      alert("Couldn't figure out which client ID to use, aborting");
+    }
+  }
+
   render() {
     let header = {};
     let body = {};
     if (!this.state.username) {
       const authParams = {
-        client_id: "dqlmuqav6goh1cy9bdmpyu6wz",
-        redirect_uri: "https://localhost:3000/",
+        client_id: this.client_id(),
+        redirect_uri: document.location,
         response_type: "token"
       };
       const authUrl = "https://www.beeminder.com/apps/authorize?" + queryString.stringify(authParams);
