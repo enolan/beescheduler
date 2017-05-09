@@ -81,10 +81,9 @@ class App extends React.Component {
       body = "";
     } else {
       header =
-        <Row>
-          <Col md={12}>{"Sup, " + this.state.username + "?"}</Col>
-          <Col md={12}><Button onClick={this.logout}>Log out</Button></Col>
-        </Row>;
+        [<Row><Col md={12}>{"Sup, " + this.state.username + "?"}</Col></Row>,
+         <Row><Col md={12}><Button onClick={this.logout}>Log out</Button></Col></Row>
+        ];
       body = (<GoalsTable
         username={this.state.username}
         token={this.state.token}
