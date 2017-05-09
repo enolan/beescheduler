@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import { FormControl } from 'react-bootstrap';
+import FormControl from 'react-bootstrap/lib/FormControl';
 
 class ValidatedFormControl extends React.Component {
   constructor (props) {
