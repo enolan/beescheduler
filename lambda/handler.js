@@ -343,11 +343,16 @@ module.exports.setsched = (username, context, cb) => {
 
 const queueSetSched = uname => {
     console.log("queueing scheduling for: " + uname);
-    return lambda.invoke({
-        FunctionName: 'beescheduler-' + process.env.SLS_STAGE + '-setsched',
-        InvocationType: 'Event',
-        Payload: JSON.stringify(uname)
-    }).promise();
+    if (process.env.IS_OFFLINE) {
+        console.log("offline environment, not queueing async scheduling");
+        return Promise.resolve("offline");
+    } else {
+        return lambda.invoke({
+            FunctionName: 'beescheduler-' + process.env.SLS_STAGE + '-setsched',
+            InvocationType: 'Event',
+            Payload: JSON.stringify(uname)
+        }).promise();
+    }
 };
 
 module.exports.queueSetScheds = (evt, ctx, cb) => {
