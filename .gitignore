@@ -2,3 +2,4 @@
 node_modules
 secrets
 lambda/dev-certs/*.pem
+frontend/build
