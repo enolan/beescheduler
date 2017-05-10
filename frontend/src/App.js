@@ -106,7 +106,7 @@ class App extends React.Component {
           <Row><Col md={12} style={{height: "15px"}}/></Row>
           {body}
       </Grid>
-    )
+    );
   }
 }
 
@@ -130,7 +130,7 @@ class GoalsTable extends React.Component {
   async getGoalSlugs() {
     const queryParams = {
       "access_token": this.props.token
-    }
+    };
     let resp = await
     fetch(getSLSBaseURL() + "/getGoalSlugs?" +
       queryString.stringify(queryParams));
