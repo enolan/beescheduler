@@ -13,10 +13,12 @@ import Well from 'react-bootstrap/lib/Well';
 
 import './App.css';
 import userDataSchema from './userDataSchema.js';
-import { deepSetState } from './util.js';
+import {
+  deepSetState
+} from './util.js';
 import ValidatedFormControl from './ValidatedFormControl.js';
 
-function getSLSBaseURL () {
+function getSLSBaseURL() {
   if (process.env.REACT_APP_LOCAL_SLS) {
     return "https://localhost:4000";
   } else {
@@ -54,7 +56,10 @@ class App extends React.Component {
 
   logout = () => {
     localStorage.clear();
-    this.setState({username: null, token: null});
+    this.setState({
+      username: null,
+      token: null
+    });
   };
 
   client_id() {
@@ -69,7 +74,9 @@ class App extends React.Component {
     }
   }
 
-  onAuthFail = () => this.setState({authFailed: true});
+  onAuthFail = () => this.setState({
+    authFailed: true
+  });
 
   render() {
     let header = {};
@@ -84,11 +91,10 @@ class App extends React.Component {
       header = <Row><Col md={12}><a href={authUrl}>{this.state.authFailed ? "Authorization failed, try again" : "Authorize"}</a></Col></Row>;
       body = "";
     } else {
-      header =
-        [<Col md={12}>{"Sup, " + this.state.username + "?"}</Col>,
-         <Col md={12}><Button onClick={this.logout}>Log out</Button></Col>,
-         <Col md={12}><HelpBox/></Col>
-        ].map((val, idx) => <Row key={idx}>{val}</Row>);
+      header = [<Col md={12}>{"Sup, " + this.state.username + "?"}</Col>,
+        <Col md={12}><Button onClick={this.logout}>Log out</Button></Col>,
+        <Col md={12}><HelpBox/></Col>
+      ].map((val, idx) => <Row key={idx}>{val}</Row>);
       body = (<GoalsTable
         username={this.state.username}
         token={this.state.token}
@@ -105,7 +111,7 @@ class App extends React.Component {
 }
 
 class GoalsTable extends React.Component {
-  constructor (props) {
+  constructor(props) {
     super(props);
     this.state = ({
       goals: {},
@@ -122,14 +128,23 @@ class GoalsTable extends React.Component {
   }
 
   async getGoalSlugs() {
-    const queryParams = {"access_token": this.props.token}
+    const queryParams = {
+      "access_token": this.props.token
+    }
     let resp = await
-      fetch(getSLSBaseURL() + "/getGoalSlugs?" +
-            queryString.stringify(queryParams));
+    fetch(getSLSBaseURL() + "/getGoalSlugs?" +
+      queryString.stringify(queryParams));
     if (resp.ok) {
       const respArray = await resp.json();
       for (let slug of respArray) {
-        deepSetState(this, {goals: {[slug]: {schedule: "fetching", validInput: true}}});
+        deepSetState(this, {
+          goals: {
+            [slug]: {
+              schedule: "fetching",
+              validInput: true
+            }
+          }
+        });
       }
     } else if (resp.status === 401) {
       this.props.onAuthFail();
@@ -137,8 +152,10 @@ class GoalsTable extends React.Component {
   }
 
   async getStoredGoals() {
-    const qstring = queryString.stringify(
-      {username: this.props.username, token: this.props.token});
+    const qstring = queryString.stringify({
+      username: this.props.username,
+      token: this.props.token
+    });
     let resp = await fetch(getSLSBaseURL() + "/storedGoals?" + qstring);
     // There should be error handling here.
     const respObj = await resp.json();
@@ -152,12 +169,24 @@ class GoalsTable extends React.Component {
           // the backend's responsibility.
           return;
         } else {
-          deepSetState(this, {goals: {[goalSlug]: {schedule: schedule}}});
+          deepSetState(this, {
+            goals: {
+              [goalSlug]: {
+                schedule: schedule
+              }
+            }
+          });
         }
       });
       _.forEach(this.state.goals, (goal, goalSlug) => {
         if (goal.schedule === "fetching") {
-          deepSetState(this, {goals: {[goalSlug]: {schedule: "unscheduled"}}});
+          deepSetState(this, {
+            goals: {
+              [goalSlug]: {
+                schedule: "unscheduled"
+              }
+            }
+          });
         }
       });
     }
@@ -165,13 +194,27 @@ class GoalsTable extends React.Component {
 
   // When one of the "using Beescheduler" checkboxes changes.
   onCheckboxChange = _.curry((gname, evt) => {
-    this.setState({dirty: true});
+    this.setState({
+      dirty: true
+    });
 
     const schedule = this.state.goals[gname].schedule;
     if (Array.isArray(schedule)) {
-      deepSetState(this, {goals: {[gname]: {schedule: "unscheduled"}}});
+      deepSetState(this, {
+        goals: {
+          [gname]: {
+            schedule: "unscheduled"
+          }
+        }
+      });
     } else if (schedule === "unscheduled") {
-      deepSetState(this, {goals: {[gname]: {schedule: Array(7).fill(0)}}});
+      deepSetState(this, {
+        goals: {
+          [gname]: {
+            schedule: Array(7).fill(0)
+          }
+        }
+      });
     } // If it's not fetched yet, do nothing.
   });
 
@@ -181,14 +224,28 @@ class GoalsTable extends React.Component {
     this.setState(prevState => {
       let newSchedule = _.clone(prevState.goals[gname].schedule);
       newSchedule[day] = newVal;
-      return _.merge({}, prevState, {goals: {[gname]: {schedule: newSchedule}}});
+      return _.merge({}, prevState, {
+        goals: {
+          [gname]: {
+            schedule: newSchedule
+          }
+        }
+      });
     });
-    this.setState({dirty: true});
+    this.setState({
+      dirty: true
+    });
   });
 
   // When one of rate fields changes validation state.
   onValidationStateChange = _.curry((gname, valid) => {
-    deepSetState(this, {goals: {[gname]: {validInput: valid}}});
+    deepSetState(this, {
+      goals: {
+        [gname]: {
+          validInput: valid
+        }
+      }
+    });
   })
 
   allValid = () => _.every(this.state.goals, g => g.validInput)
@@ -196,23 +253,29 @@ class GoalsTable extends React.Component {
   saveSchedule() {
     this.setState(prevState => {
       const scheduledGoals = filterObjectVals(prevState.goals, g => Array.isArray(g.schedule));
-      const toStore =
-        {token: this.props.token,
-         name: this.props.username,
-         goals: _.mapValues(scheduledGoals, g => g.schedule)
-        };
+      const toStore = {
+        token: this.props.token,
+        name: this.props.username,
+        goals: _.mapValues(scheduledGoals, g => g.schedule)
+      };
       const validationResult = jsonschema.validate(toStore, userDataSchema);
       if (validationResult.valid) {
         fetch(
-          getSLSBaseURL() + "/storedGoals",
-          {method: "POST", body: JSON.stringify(toStore)})
+            getSLSBaseURL() + "/storedGoals", {
+              method: "POST",
+              body: JSON.stringify(toStore)
+            })
           .then(
-            resp => {if (resp.ok) {
-              this.setState({saving: false});
-            } else {
-              //FIXME
-              alert("saving failed", resp);
-            }},
+            resp => {
+              if (resp.ok) {
+                this.setState({
+                  saving: false
+                });
+              } else {
+                //FIXME
+                alert("saving failed", resp);
+              }
+            },
             err => alert("saving failed", err))
       }
       let newState = _.clone(prevState);
@@ -272,7 +335,9 @@ class GoalsTable extends React.Component {
 class GoalRow extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {validRates: Array(7).fill(true)};
+    this.state = {
+      validRates: Array(7).fill(true)
+    };
   }
 
   render() {
@@ -319,12 +384,15 @@ class GoalRow extends React.Component {
     this.setState(prevState => {
       let newValidRates = _.clone(prevState.validRates);
       newValidRates[idx] = valid;
-      return {validRates: newValidRates};
+      return {
+        validRates: newValidRates
+      };
     });
 
     if (wasValid !== isValid) {
       this.props.onValidationStateChange(isValid);
-    }})
+    }
+  })
 }
 
 export default App;
@@ -345,23 +413,31 @@ class HelpBox extends React.Component {
     try {
       let wantsHelp = JSON.parse(localStorage.getItem("wantsHelp"));
       if (typeof wantsHelp === "boolean") {
-        this.state = {wantsHelp: wantsHelp};
+        this.state = {
+          wantsHelp: wantsHelp
+        };
       } else {
         localStorage.setItem("wantsHelp", JSON.stringify(true));
-        this.state = {wantsHelp: true};
+        this.state = {
+          wantsHelp: true
+        };
       }
     } catch (ex) {
       if (ex instanceof SyntaxError) {
         console.log("parsing wantsHelp: ", ex);
         localStorage.setItem("wantsHelp", true);
-        this.state = {wantsHelp: true};
+        this.state = {
+          wantsHelp: true
+        };
       }
     }
   }
 
   toggleWantHelp = () => {
     localStorage.setItem("wantsHelp", JSON.stringify(!this.state.wantsHelp));
-    this.setState({wantsHelp: !this.state.wantsHelp});
+    this.setState({
+      wantsHelp: !this.state.wantsHelp
+    });
   }
   render() {
     return (
