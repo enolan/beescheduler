@@ -60,8 +60,10 @@ class App extends React.Component {
   client_id() {
     if (document.location.href.match(/localhost/) !== null) {
       return "dqlmuqav6goh1cy9bdmpyu6wz";
-    } else if (document.location.href.match(/s3-website/) !== null) {
+    } else if (document.location.href.match(/beescheduler-dev.echonolan.net/) !== null) {
       return "atfphg2m06sjkavmodmwxxlfp";
+    } else if (document.location.href.match(/beescheduler.echonolan.net/)) {
+      alert("Make a BM app for prod, Echo!");
     } else {
       alert("Couldn't figure out which client ID to use, aborting");
     }
