@@ -30,6 +30,9 @@ provider:
     - Effect: "Allow"
       Action: "lambda:InvokeFunction"
       Resource: "arn:aws:lambda:*:*:function:*"
+    - Effect: "Allow"
+      Action: "s3:PutObject"
+      Resource: "arn:aws:s3:::beescheduler-${self:custom.stage}-ddb-backup/*"
   environment:
     SLS_STAGE: ${self:custom.stage}
 
@@ -81,6 +84,11 @@ functions:
       - http:
           path: "/storedGoals"
           method: post
+  backupDDB:
+    handler: handler.backupDDB
+    events:
+      - schedule: rate(6 hours)
+    timeout: 300
   jsonstring:
     handler: handler.jsonstring
     events:

@@ -8,6 +8,7 @@ const dynamoDoc = dynamodb.doc;
 const jsonschema = require('jsonschema');
 const aws = require('aws-sdk');
 const lambda = new aws.Lambda();
+const dynamoBackup = require('dynamo-backup-to-s3');
 
 const userDataSchema = require('./userDataSchema.js').userDataSchema;
 
@@ -371,4 +372,26 @@ module.exports.queueSetScheds = (evt, ctx, cb) => {
                     err => cb(err, null));
             }
         }, err => cb(err, null));
+};
+
+module.exports.backupDDB = (evt, ctx, cb) => {
+    let backup = new dynamoBackup({
+        includedTables: [usersTableName],
+        bucket: 'beescheduler-' + process.env.SLS_STAGE + '-ddb-backup',
+        stopOnFailure: true,
+        base64Binay: true
+    });
+    backup.on('error', data => {
+        console.log('Error backing up!');
+        console.log(data.err);
+        cb(data, null);
+    });
+    backup.on('end-backup', (tableName, backupDuration) => {
+        console.log('Done backing up ' + tableName);
+        console.log('Backup took ' + backupDuration.valueOf()/1000 + ' seconds.');
+    });
+    backup.backupAllTables(() => {
+        console.log('Backup done!');
+        cb(null, "");
+    });
 };
