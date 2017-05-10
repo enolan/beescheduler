@@ -22,7 +22,7 @@ main = do
         _other -> error "stage set to bad value"
   runProcess $ shell "npm run build"
   runProcess $ shell $
-    "aws s3 sync build s3://beescheduler-" <> stage <> "-cf-origin"
+    "aws s3 sync --delete build s3://beescheduler-" <> stage <> "-cf-origin"
   runProcess $ proc "aws" $
     ["cloudfront", "create-invalidation", "--distribution-id", cfDistId,
      "--paths"] ++ invalidatedFiles
