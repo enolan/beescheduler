@@ -8,7 +8,7 @@ import Col from 'react-bootstrap/lib/Col';
 import Collapse from 'react-bootstrap/lib/Collapse';
 import Grid from 'react-bootstrap/lib/Grid';
 import Row from 'react-bootstrap/lib/Row';
-import Table from 'react-bootstrap/lib/Table'
+import Table from 'react-bootstrap/lib/Table';
 import Well from 'react-bootstrap/lib/Well';
 
 import './App.css';
@@ -54,7 +54,7 @@ class App extends React.Component {
 
   logout = () => {
     localStorage.clear();
-    this.setState({username: null, token: null})
+    this.setState({username: null, token: null});
   };
 
   client_id() {
