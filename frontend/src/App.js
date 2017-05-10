@@ -118,7 +118,13 @@ class App extends React.Component {
       };
       const authUrl = "https://www.beeminder.com/apps/authorize?" + queryString.stringify(authParams);
       header = <Row><Col md={12}>{helpWell}</Col></Row>;
-      body = <Row><Col md={12}><a href={authUrl}>{this.state.authFailed ? "Authorization failed, try again" : "Authorize"}</a></Col></Row>;
+      body = <Row>
+        <Col md={12}>
+            <Button href={authUrl}>
+                {this.state.authFailed ? "Authorization failed, try again" : "Authorize"}
+            </Button>
+        </Col>
+      </Row>;
     } else {
       header = [<Col md={12}>{"Sup, " + this.state.username + "?"}</Col>,
                 <Col md={12}><Button onClick={this.logout}>Log out</Button></Col>,
