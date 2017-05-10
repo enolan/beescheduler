@@ -30,6 +30,35 @@ function getSLSBaseURL() {
   }
 }
 
+const helpWell =
+    <div>
+        <Well>
+            <p>
+                Beescheduler lets you schedule different rates for your
+                Beeminder goals based on the days of the week. I wrote it
+                so I could focus on one project Monday - Wednesday and
+                different ones on Thursday and Friday. This is much better
+                than doing a tiny amount on all of them every day.
+            </p>
+            <p>
+                It's sort of like a much fancier version of the built-in
+                <a href="http://blog.beeminder.com/weekends/"> "weekends
+                off" feature</a>.
+            </p>
+            <p>
+                For another example, you could write 500 words on Monday,
+                Tuesday and Wednesday and take the rest of the week off.
+                Or go for short runs every other weekday and longer ones
+                on the weekends. Or whatever else you can think of.
+            </p>
+            <p>
+                The table below shows your current Beeminder goals. To use
+                Beescheduler for one of them, click on the checkbox under
+                "Using Beescheduler" and fill in rates for each day of the week.
+            </p>
+        </Well>
+    </div>;
+
 class App extends React.Component {
   componentWillMount() {
     let foundUsername = null;
@@ -88,12 +117,12 @@ class App extends React.Component {
         response_type: "token"
       };
       const authUrl = "https://www.beeminder.com/apps/authorize?" + queryString.stringify(authParams);
-      header = <Row><Col md={12}><a href={authUrl}>{this.state.authFailed ? "Authorization failed, try again" : "Authorize"}</a></Col></Row>;
-      body = "";
+      header = <Row><Col md={12}>{helpWell}</Col></Row>;
+      body = <Row><Col md={12}><a href={authUrl}>{this.state.authFailed ? "Authorization failed, try again" : "Authorize"}</a></Col></Row>;
     } else {
       header = [<Col md={12}>{"Sup, " + this.state.username + "?"}</Col>,
-        <Col md={12}><Button onClick={this.logout}>Log out</Button></Col>,
-        <Col md={12}><HelpBox/></Col>
+                <Col md={12}><Button onClick={this.logout}>Log out</Button></Col>,
+                <Col md={12}><HelpBox/></Col>
       ].map((val, idx) => <Row key={idx}>{val}</Row>);
       body = (<GoalsTable
         username={this.state.username}
@@ -446,20 +475,7 @@ class HelpBox extends React.Component {
               {this.state.wantsHelp ? "Hide help" : "Show help"}
           </Button>
           <Collapse in={this.state.wantsHelp}>
-              <div><Well>
-                  <p>
-                      Beescheduler lets you schedule different rates for your
-                      Beeminder goals based on the days of the week. For example,
-                      you could write 500 words on Monday, Tuesday and Wednesday and
-                      take the rest of the week off. Or go for short runs every weekday
-                      and longer ones on the weekends. Or whatever else you can think of.
-                  </p>
-                  <p>
-                      The table below shows your current Beeminder goals. To use
-                      Beescheduler for one of them, click on the checkbox under
-                      "Using Beescheduler" and fill in rates for each day of the week.
-                  </p>
-              </Well></div>
+              {helpWell}
           </Collapse>
       </div>
     );
