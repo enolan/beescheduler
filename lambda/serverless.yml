@@ -26,6 +26,7 @@ provider:
         - "dynamodb:GetItem"
         - "dynamodb:PutItem"
         - "dynamodb:Scan"
+        - "dynamodb:DescribeTable"
       Resource: "arn:aws:dynamodb:*:*:table/users-${self:custom.stage}"
     - Effect: "Allow"
       Action: "lambda:InvokeFunction"

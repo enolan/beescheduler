@@ -375,23 +375,27 @@ module.exports.queueSetScheds = (evt, ctx, cb) => {
 };
 
 module.exports.backupDDB = (evt, ctx, cb) => {
+    console.log("Starting backup of " + usersTableName);
     let backup = new dynamoBackup({
-        includedTables: [usersTableName],
         bucket: 'beescheduler-' + process.env.SLS_STAGE + '-ddb-backup',
         stopOnFailure: true,
         base64Binay: true
     });
     backup.on('error', data => {
         console.log('Error backing up!');
-        console.log(data.err);
-        cb(data, null);
+        console.log(JSON.stringify(data));
     });
     backup.on('end-backup', (tableName, backupDuration) => {
         console.log('Done backing up ' + tableName);
         console.log('Backup took ' + backupDuration.valueOf()/1000 + ' seconds.');
     });
-    backup.backupAllTables(() => {
-        console.log('Backup done!');
-        cb(null, "");
+    backup.backupTable(usersTableName, err => {
+        if(err) {
+            console.log("Backup error: " + err);
+            cb(err, null);
+        } else {
+            console.log('Backup done!');
+            cb(null, "");
+        }
     });
 };
