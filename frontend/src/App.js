@@ -6,6 +6,7 @@ import Button from 'react-bootstrap/lib/Button';
 import Checkbox from 'react-bootstrap/lib/Checkbox';
 import Col from 'react-bootstrap/lib/Col';
 import Collapse from 'react-bootstrap/lib/Collapse';
+import Glyphicon from 'react-bootstrap/lib/Glyphicon';
 import Grid from 'react-bootstrap/lib/Grid';
 import Row from 'react-bootstrap/lib/Row';
 import Table from 'react-bootstrap/lib/Table';
@@ -30,9 +31,26 @@ function getSLSBaseURL() {
   }
 }
 
-const helpWell =
+// There's some weirdness going on here. If I use {helpWell()} I get the right
+// behavior, but using <HelpWell/> creates an extra DOM element or something
+// and the collapse doesn't work.
+function helpWell() {
+  let stageWarning = null;
+  if (document.location.href.match(/beescheduler-dev.echonolan.net/)) {
+    stageWarning =
+      <p style={{backgroundColor: "red"}}>
+          <Glyphicon glyph="warning-sign"/>{" "}
+          This is the development version of Beescheduler! If your name isn't
+          Echo Nolan, <strong>this page will not work!</strong> You want{" "}
+          <a href="https://beescheduler.echonolan.net">this site</a> instead.{" "}
+          <Glyphicon glyph="warning-sign"/>
+      </p>;
+  }
+
+  return (
     <div>
         <Well>
+            {stageWarning}
             <p>
                 Beescheduler lets you schedule different rates for your
                 Beeminder goals based on the days of the week. I wrote it
@@ -57,7 +75,8 @@ const helpWell =
                 "Using Beescheduler" and fill in rates for each day of the week.
             </p>
         </Well>
-    </div>;
+    </div>);
+}
 
 class App extends React.Component {
   componentWillMount() {
@@ -117,7 +136,7 @@ class App extends React.Component {
         response_type: "token"
       };
       const authUrl = "https://www.beeminder.com/apps/authorize?" + queryString.stringify(authParams);
-      header = <Row><Col md={12}>{helpWell}</Col></Row>;
+      header = <Row><Col md={12}>{helpWell()}</Col></Row>;
       body = <Row>
         <Col md={12}>
             <Button href={authUrl}>
@@ -481,7 +500,7 @@ class HelpBox extends React.Component {
               {this.state.wantsHelp ? "Hide help" : "Show help"}
           </Button>
           <Collapse in={this.state.wantsHelp}>
-              {helpWell}
+              {helpWell()}
           </Collapse>
       </div>
     );
