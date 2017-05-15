@@ -41,8 +41,8 @@ const helpWell =
                 than doing a tiny amount on all of them every day.
             </p>
             <p>
-                It's sort of like a much fancier version of the built-in
-                <a href="http://blog.beeminder.com/weekends/"> "weekends
+                It's sort of like a much fancier version of the built-in{" "}
+                <a href="http://blog.beeminder.com/weekends/">"weekends
                 off" feature</a>.
             </p>
             <p>
