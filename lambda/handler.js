@@ -135,7 +135,8 @@ function jsonResponse(cb, status, data) {
     });
 }
 
-module.exports.getGoalSlugs = (event, context, cb) => {
+module.exports.getGoalSlugs = ipBlockWrapper((event, context, cb) => {
+    console.log(event);
     if (!event.queryStringParameters ||
         !event.queryStringParameters.access_token) {
         jsonResponse(cb, 400, {
@@ -158,7 +159,7 @@ module.exports.getGoalSlugs = (event, context, cb) => {
                 }));
         return;
     }
-};
+});
 
 const goalErrorTypes = {
     badDb: "invalid item in db",
@@ -206,7 +207,7 @@ function getStoredGoals(username) {
     });
 }
 
-module.exports.getStoredGoalsHTTP = (event, context, cb) => {
+module.exports.getStoredGoalsHTTP = ipBlockWrapper((event, context, cb) => {
     if (!event.queryStringParameters ||
         !event.queryStringParameters.username ||
         !event.queryStringParameters.token) {
@@ -255,9 +256,9 @@ module.exports.getStoredGoalsHTTP = (event, context, cb) => {
                     }
                 });
     }
-};
+});
 
-module.exports.setGoalSchedule = (event, context, cb) => {
+module.exports.setGoalSchedule = ipBlockWrapper((event, context, cb) => {
     try {
         const bodyParsed = JSON.parse(event.body);
         const validationResult = jsonschema.validate(bodyParsed, userDataSchema);
@@ -313,7 +314,7 @@ module.exports.setGoalSchedule = (event, context, cb) => {
             throw ex;
         }
     }
-};
+});
 
 // For a bug report against Firefox...
 
@@ -399,3 +400,22 @@ module.exports.backupDDB = (evt, ctx, cb) => {
         }
     });
 };
+
+const echosIP = "173.239.230.74";
+
+// Take a HTTP request handler and wrap it such that requests to stages other
+// than prod are blocked if they don't come from my IP address.
+function ipBlockWrapper(func) {
+    if (process.env.IS_OFFLINE || process.env.SLS_STAGE === "prod") {
+        return func;
+    } else {
+        return (evt, ctx, cb) => {
+            const incomingIp = evt.requestContext.identity.sourceIp;
+            if (incomingIp === echosIP) {
+                func(evt, ctx, cb);
+            } else {
+                jsonResponse(cb, 401, "request blocked by IP");
+            }
+        };
+    }
+}
