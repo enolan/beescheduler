@@ -138,10 +138,9 @@ function jsonResponse(cb, status, data) {
 module.exports.getGoalSlugs = ipBlockWrapper((event, context, cb) => {
     console.log(event);
     if (!event.queryStringParameters ||
-        !event.queryStringParameters.access_token) {
-        jsonResponse(cb, 400, {
-            'error': 'missing access_token param'
-        });
+        !event.queryStringParameters.access_token ||
+        !event.queryStringParameters.username) {
+        jsonResponse(cb, 400, "missing access_token or username param");
         return;
     } else {
         getUserInfoPromise(event.queryStringParameters.access_token)

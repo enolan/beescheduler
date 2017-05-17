@@ -130,6 +130,9 @@ class App extends React.Component {
     let header = {};
     let body = {};
     if (!this.state.username || this.state.authFailed) {
+      // Whenever a user authorizes the app, we get a NEW token and all old
+      // tokens are invalidated. It's important that the new token is always
+      // stored.
       const authParams = {
         client_id: this.client_id(),
         redirect_uri: document.location,
@@ -183,7 +186,8 @@ class GoalsTable extends React.Component {
 
   async getGoalSlugs() {
     const queryParams = {
-      "access_token": this.props.token
+      access_token: this.props.token,
+      username: this.props.username
     };
     let resp = await
     fetch(getSLSBaseURL() + "/getGoalSlugs?" +
