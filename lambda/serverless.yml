@@ -138,7 +138,7 @@ custom:
     seed:
       users:
         sources:
-          - table: users
+          - table: users-${self:custom.stage}
             sources: [./usersSeed.json]
   serverless-offline:
     httpsProtocol: "dev-certs"
