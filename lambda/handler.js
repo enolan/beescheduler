@@ -135,6 +135,13 @@ function jsonResponse(cb, status, data) {
     });
 }
 
+function putUserInfo(uinfo) {
+    return dynamoDoc.put({
+        TableName: usersTableName,
+        Item: uinfo
+    }).promise();
+}
+
 module.exports.getGoalSlugs = ipBlockWrapper((event, context, cb) => {
     console.log(event);
     if (!event.queryStringParameters ||
@@ -229,10 +236,7 @@ module.exports.getStoredGoalsHTTP = ipBlockWrapper((event, context, cb) => {
                                     // If the token is valid, for the right username, save it
                                     // back in the DB.
                                     val.token = event.queryStringParameters.token;
-                                    return dynamoDoc.put({
-                                        TableName: usersTableName,
-                                        Item: val
-                                    }).promise().then(res => jsonResponse(cb, 200, val));
+                                    return putUserInfo(val).then(res => jsonResponse(cb, 200, val));
                                 } else {
                                     jsonResponse(cb, 401,
                                                  "Username returned by Beeminder for token, doesn't match passed");
@@ -261,12 +265,9 @@ module.exports.setGoalSchedule = ipBlockWrapper((event, context, cb) => {
     try {
         const bodyParsed = JSON.parse(event.body);
         const validationResult = jsonschema.validate(bodyParsed, userDataSchema);
-        const putUserInfo = () => dynamoDoc.put(
-            {TableName: usersTableName,
-             Item: bodyParsed
-            }).promise().then(
+        const putUserInfoAndExit = () => putUserInfo(bodyParsed).then(
                 dynamoDbRes => jsonResponse(cb, 200, "ok"),
-                err => jsonResponse(cb, 500, "DynamoDB error"));
+                err => jsonResponse(cb, 500, err));
 
         const tokenValidatedInDDB = () =>
                   getStoredGoals(bodyParsed.name).then(
@@ -279,18 +280,17 @@ module.exports.setGoalSchedule = ipBlockWrapper((event, context, cb) => {
                 validated => {
                     if (validated) {
                         queueSetSched(bodyParsed.name);
-                        return putUserInfo();
+                        putUserInfoAndExit();
                     } else {
                         // They might've sent a token that is valid for their
                         // account but is different from the one we have stored.
-                        return getUserInfoPromise(bodyParsed.token).then(
+                        getUserInfoPromise(bodyParsed.token).then(
                             uinfo => {
                                 if (uinfo.username === bodyParsed.name) {
                                     queueSetSched(bodyParsed.name);
-                                    return putUserInfo();
+                                    putUserInfoAndExit();
                                 } else {
                                     jsonResponse(cb, 401, "Username returned by Beeminder doesn't match passed");
-                                    return null; // Get jshint to chill.
                                 }
                             },
                             err => {
