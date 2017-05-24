@@ -56,13 +56,13 @@ function getUserInfoPromise(token) {
              ["profitable","jobhunt","bedroom","survey","cycling","moonshot",
               "weeklyreview","reading"]});
     } else {
-    return rqpr({
-        uri: 'https://www.beeminder.com/api/v1/users/me.json',
-        qs: {
-            'access_token': token
-        },
-        json: true
-    });
+        return rqpr({
+            uri: 'https://www.beeminder.com/api/v1/users/me.json',
+            qs: {
+                'access_token': token
+            },
+            json: true
+        });
     }
 }
 
