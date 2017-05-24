@@ -143,7 +143,6 @@ function putUserInfo(uinfo) {
 }
 
 module.exports.getGoalSlugs = ipBlockWrapper((event, context, cb) => {
-    console.log(event);
     if (!event.queryStringParameters ||
         !event.queryStringParameters.access_token ||
         !event.queryStringParameters.username) {
