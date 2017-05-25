@@ -137,10 +137,15 @@ function jsonResponse(cb, status, data) {
 }
 
 function putUserInfo(uinfo) {
-    return dynamoDoc.put({
-        TableName: usersTableName,
-        Item: uinfo
-    }).promise();
+    const validationResult = jsonschema.validate(uinfo, userDataSchema);
+    if (validationResult.valid) {
+        return dynamoDoc.put({
+            TableName: usersTableName,
+            Item: uinfo
+        }).promise();
+    } else {
+        return Promise.reject(validationResult.errors);
+    }
 }
 
 // This is called every time the frontend is loaded, and therefore after every
