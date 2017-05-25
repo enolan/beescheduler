@@ -54,7 +54,8 @@ function getUserInfoPromise(token) {
         return Promise.resolve(
             {goals:
              ["profitable","jobhunt","bedroom","survey","cycling","moonshot",
-              "weeklyreview","reading"]});
+              "weeklyreview","reading"],
+             username: "RonaldPUserman"});
     } else {
         return rqpr({
             uri: 'https://www.beeminder.com/api/v1/users/me.json',
@@ -142,17 +143,66 @@ function putUserInfo(uinfo) {
     }).promise();
 }
 
+// This is called every time the frontend is loaded, and therefore after every
+// new authorization. It's responsible for updating the token in the DB if it's
+// changed.
 module.exports.getGoalSlugs = ipBlockWrapper((event, context, cb) => {
     if (!event.queryStringParameters ||
         !event.queryStringParameters.access_token ||
         !event.queryStringParameters.username) {
         jsonResponse(cb, 400, "missing access_token or username param");
-        return;
     } else {
-        getUserInfoPromise(event.queryStringParameters.access_token)
+        const access_token = event.queryStringParameters.access_token;
+        const username = event.queryStringParameters.username;
+        const logMsg = str => console.log(username + ": " + str);
+        getUserInfoPromise(access_token)
             .then(
                 (uinfo => {
-                    jsonResponse(cb, 200, uinfo.goals);
+                    if (username === uinfo.username) {
+                        // If the username that Beeminder returns for the given token
+                        // matches the username in our query string...
+                        dynamoDoc.get({
+                            TableName: usersTableName,
+                            Key: {
+                                name: username
+                            }
+                        }).promise().then(
+                            ddbResponse => {
+                                if (_.isEqual(ddbResponse, {})) {
+                                    // That user isn't in our DB.
+                                    putUserInfo({
+                                        token: access_token,
+                                        goals: {},
+                                        name: username
+                                    }).then(() => {
+                                        logMsg("new user");
+                                        jsonResponse(cb, 200, uinfo.goals);
+                                    });
+                                } else {
+                                    // They are in the DB.
+                                    const ddbItem = ddbResponse.Item;
+                                    if (ddbItem.token === access_token) {
+                                        // Token doesn't need updating.
+                                        logMsg("existing user");
+                                        jsonResponse(cb, 200, uinfo.goals);
+                                    } else {
+                                        // Token does need updating.
+                                        ddbItem.token = access_token;
+                                        putUserInfo(ddbItem).then(() => {
+                                            logMsg("update token");
+                                            jsonResponse(cb, 200, uinfo.goals);
+                                        });
+                                    }
+                                }
+                            },
+                            err => {
+                                console.log("DDB error fetching " + username);
+                                console.log(JSON.stringify(err));
+                                jsonResponse(cb, 500, "DynamoDB error");
+                            });
+                    } else {
+                        jsonResponse(cb, 401, "passed username doesn't match token.");
+                    }
                 }),
                 (err => {
                     if (err.statusCode === 401) {
@@ -162,7 +212,6 @@ module.exports.getGoalSlugs = ipBlockWrapper((event, context, cb) => {
                         jsonResponse(cb, 500, "");
                     }
                 }));
-        return;
     }
 });
 
@@ -225,29 +274,8 @@ module.exports.getStoredGoalsHTTP = ipBlockWrapper((event, context, cb) => {
                 val => {
                     if (val.token === event.queryStringParameters.token) {
                         jsonResponse(cb, 200, val);
-                        return null;
                     } else {
-                        // The token they sent doesn't match our database, but
-                        // it might still be valid.
-                        return getUserInfoPromise(event.queryStringParameters.token).then(
-                            uinfo => {
-                                if (uinfo.username === event.queryStringParameters.username) {
-                                    // If the token is valid, for the right username, save it
-                                    // back in the DB.
-                                    val.token = event.queryStringParameters.token;
-                                    return putUserInfo(val).then(res => jsonResponse(cb, 200, val));
-                                } else {
-                                    jsonResponse(cb, 401,
-                                                 "Username returned by Beeminder for token, doesn't match passed");
-                                    return null;
-                                }
-                            },
-                            err => {
-                                if (err.statusCode === 401) {
-                                    jsonResponse(cb, 401, "Beeminder returned 401");
-                                } else {
-                                    jsonResponse(cb, 500, err);
-                                }});
+                        jsonResponse(cb, 401, "Passed token doesn't match DDB");
                     }
                 },
                 fail => {
@@ -278,27 +306,10 @@ module.exports.setGoalSchedule = ipBlockWrapper((event, context, cb) => {
             tokenValidatedInDDB().then(
                 validated => {
                     if (validated) {
-                        queueSetSched(bodyParsed.name);
-                        putUserInfoAndExit();
+                        queueSetSched(bodyParsed.name).then(
+                            () => putUserInfoAndExit());
                     } else {
-                        // They might've sent a token that is valid for their
-                        // account but is different from the one we have stored.
-                        getUserInfoPromise(bodyParsed.token).then(
-                            uinfo => {
-                                if (uinfo.username === bodyParsed.name) {
-                                    queueSetSched(bodyParsed.name);
-                                    putUserInfoAndExit();
-                                } else {
-                                    jsonResponse(cb, 401, "Username returned by Beeminder doesn't match passed");
-                                }
-                            },
-                            err => {
-                                if (err.statusCode === 401) {
-                                    jsonResponse(cb, 401, "Beeminder API returned 401");
-                                } else {
-                                    jsonResponse(cb, 500, "Beeminder API error in getUserInfoPromise");
-                                }
-                            });
+                        jsonResponse(cb, 401, "token doesn't match database");
                     }
                 }
             );
