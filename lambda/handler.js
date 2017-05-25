@@ -104,7 +104,7 @@ function scheduleGoal(token, goalName, schedule) {
             goalInfo.roadall.map(x => [moment(x[0], "X"), x[1], x[2]])
             .filter(x => x[0] < oneWeekOut).map(
                 x => [beeDateFormat(x[0]), x[1], x[2]]);
-        let lastSegmentFull = goalInfo.fullroad[truncatedRoad.length];
+        let lastSegmentFull = goalInfo.fullroad[truncatedRoad.length - 1];
         truncatedRoad.push([beeDateFormat(oneWeekOut), null, lastSegmentFull[2]]);
         let oneWeekOutDay = oneWeekOut.day();
         let newSegment = [];
