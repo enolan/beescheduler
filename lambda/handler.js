@@ -161,15 +161,23 @@ module.exports.getGoalSlugs = ipBlockWrapper((event, context, cb) => {
                     if (username === uinfo.username) {
                         // If the username that Beeminder returns for the given token
                         // matches the username in our query string...
-                        dynamoDoc.get({
-                            TableName: usersTableName,
-                            Key: {
-                                name: username
-                            }
-                        }).promise().then(
-                            ddbResponse => {
-                                if (_.isEqual(ddbResponse, {})) {
-                                    // That user isn't in our DB.
+                        getStoredGoals(username).then(
+                            ddbItem => {
+                                if (ddbItem.token === access_token) {
+                                    // Token doesn't need updating.
+                                    logMsg("existing user");
+                                    jsonResponse(cb, 200, uinfo.goals);
+                                } else {
+                                    // Token does need updating.
+                                    ddbItem.token = access_token;
+                                    putUserInfo(ddbItem).then(() => {
+                                        logMsg("update token");
+                                        jsonResponse(cb, 200, uinfo.goals);
+                                    });
+                                }
+                            },
+                            err => {
+                                if (err.type === goalErrorTypes.noSuchUser) {
                                     putUserInfo({
                                         token: access_token,
                                         goals: {},
@@ -179,26 +187,10 @@ module.exports.getGoalSlugs = ipBlockWrapper((event, context, cb) => {
                                         jsonResponse(cb, 200, uinfo.goals);
                                     });
                                 } else {
-                                    // They are in the DB.
-                                    const ddbItem = ddbResponse.Item;
-                                    if (ddbItem.token === access_token) {
-                                        // Token doesn't need updating.
-                                        logMsg("existing user");
-                                        jsonResponse(cb, 200, uinfo.goals);
-                                    } else {
-                                        // Token does need updating.
-                                        ddbItem.token = access_token;
-                                        putUserInfo(ddbItem).then(() => {
-                                            logMsg("update token");
-                                            jsonResponse(cb, 200, uinfo.goals);
-                                        });
-                                    }
+                                    logMsg("DDB error fetching");
+                                    console.log(JSON.stringify(err));
+                                    jsonResponse(cb, 500, "DynamoDB error");
                                 }
-                            },
-                            err => {
-                                console.log("DDB error fetching " + username);
-                                console.log(JSON.stringify(err));
-                                jsonResponse(cb, 500, "DynamoDB error");
                             });
                     } else {
                         jsonResponse(cb, 401, "passed username doesn't match token.");
