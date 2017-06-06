@@ -98,14 +98,28 @@ function scheduleGoal(token, goalName, schedule) {
         'millisecond': 0
     }).add(7, 'days');
     return getGoalPromise(token, goalName).then(goalInfo => {
+        // The idea here is to keep the road exactly the same up until the
+        // akrasia horizon, then schedule by days of the week from akrasia
+        // horizon to akrasia horizon + 7 days. To that end, we remove all
+        // segments before a week from today, add a new segment that continues
+        // the last rate up until the akrasia horizon, then add all our stuff
+        // after that.
         console.log(goalInfo);
         let rUnitMultiplier = getRUnitMultiplier(goalInfo);
         let truncatedRoad =
             goalInfo.roadall.map(x => [moment(x[0], "X"), x[1], x[2]])
             .filter(x => x[0] < oneWeekOut).map(
                 x => [beeDateFormat(x[0]), x[1], x[2]]);
-        let lastSegmentFull = goalInfo.fullroad[truncatedRoad.length - 1];
-        truncatedRoad.push([beeDateFormat(oneWeekOut), null, lastSegmentFull[2]]);
+        // Add the segment that continues at the same rate up until the akrasia
+        // horizon.
+        if (truncatedRoad.length < goalInfo.roadall.length) {
+            let lastSegmentFull = goalInfo.fullroad[truncatedRoad.length];
+            truncatedRoad.push([beeDateFormat(oneWeekOut), null, lastSegmentFull[2]]);
+        } else {
+            // If the goal ends before one week from today, the rate is zero
+            // after the end.
+            truncatedRoad.push([beeDateFormat(oneWeekOut), null, 0]);
+        }
         let oneWeekOutDay = oneWeekOut.day();
         let newSegment = [];
         for (let i = 0; i < 7; i++) {
