@@ -105,6 +105,10 @@ function scheduleGoal(token, goalName, schedule) {
         // the last rate up until the akrasia horizon, then add all our stuff
         // after that.
         console.log(goalInfo);
+        if (goalInfo.frozen) {
+            return Promise.reject(
+                "goal is frozen, editing road may cause spurious derail.");
+        }
         let rUnitMultiplier = getRUnitMultiplier(goalInfo);
         let truncatedRoad =
             goalInfo.roadall.map(x => [moment(x[0], "X"), x[1], x[2]])
