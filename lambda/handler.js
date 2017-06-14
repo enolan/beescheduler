@@ -10,84 +10,10 @@ const aws = require('aws-sdk');
 const lambda = new aws.Lambda();
 const dynamoBackup = require('dynamo-backup-to-s3');
 
+const bm = require('./beeminder.js');
 const userDataSchema = require('./userDataSchema.js').userDataSchema;
 
 const usersTableName = 'users-' + process.env.SLS_STAGE;
-
-function beeDateFormat(date) {
-    return date.format("YYYY-MM-DD", date);
-}
-
-function setRoad(goalName, roadAll, token) {
-    console.log("setting " + goalName);
-    console.log(roadAll);
-    let opts = {
-        uri: 'https://www.beeminder.com/api/v1/users/me/goals/' + goalName + '.json',
-        method: 'PUT',
-        json: true,
-        body: {
-            'access_token': token,
-            'roadall': roadAll
-        }
-    };
-    if (roadAll.length === 0) {
-        return Promise.reject("empty road");
-    } else {
-        for (let i = 1; i < roadAll.length; i++) {
-            if (_.isEqual(roadAll[i], roadAll[i - 1])) {
-                return Promise.reject("duplicate row: " + roadAll[i].toString());
-            }
-        }
-        return rqpr(opts);
-    }
-}
-
-function getGoalPromise(token, goalName) {
-    return rqpr({
-        uri: 'https://www.beeminder.com/api/v1/users/me/goals/' + goalName + '.json',
-        qs: {'access_token': token},
-        json: true});
-}
-
-function getUserInfoPromise(token) {
-    if (process.env.IS_OFFLINE && token === "fakeToken") {
-        return Promise.resolve(
-            {goals:
-             ["profitable","jobhunt","bedroom","survey","cycling","moonshot",
-              "weeklyreview","reading"],
-             username: "RonaldPUserman"});
-    } else {
-        return rqpr({
-            uri: 'https://www.beeminder.com/api/v1/users/me.json',
-            qs: {
-                'access_token': token
-            },
-            json: true
-        });
-    }
-}
-
-function getRUnitMultiplier(goalInfo) {
-    let res;
-    switch (goalInfo.runits) {
-        case 'y':
-            res = 365.25;
-            break;
-        case 'm':
-            res = 30;
-            break;
-        case 'w':
-            res = 7;
-            break;
-        case 'd':
-            res = 1;
-            break;
-        case 'h':
-            res = 1 / 24;
-            break;
-    }
-    return res;
-}
 
 function scheduleGoal(token, goalName, schedule) {
     console.log("scheduleGoal " + goalName + " " + schedule);
@@ -97,7 +23,7 @@ function scheduleGoal(token, goalName, schedule) {
         'second': 0,
         'millisecond': 0
     }).add(7, 'days');
-    return getGoalPromise(token, goalName).then(goalInfo => {
+    return bm.getGoal(token, goalName).then(goalInfo => {
         // The idea here is to keep the road exactly the same up until the
         // akrasia horizon, then schedule by days of the week from akrasia
         // horizon to akrasia horizon + 7 days. To that end, we remove all
@@ -109,20 +35,20 @@ function scheduleGoal(token, goalName, schedule) {
             return Promise.reject(
                 "goal is frozen, editing road may cause spurious derail.");
         }
-        let rUnitMultiplier = getRUnitMultiplier(goalInfo);
+        let rUnitMultiplier = bm.getRUnitMultiplier(goalInfo);
         let truncatedRoad =
             goalInfo.roadall.map(x => [moment(x[0], "X"), x[1], x[2]])
             .filter(x => x[0] < oneWeekOut).map(
-                x => [beeDateFormat(x[0]), x[1], x[2]]);
+                x => [bm.beeDateFormat(x[0]), x[1], x[2]]);
         // Add the segment that continues at the same rate up until the akrasia
         // horizon.
         if (truncatedRoad.length < goalInfo.roadall.length) {
             let lastSegmentFull = goalInfo.fullroad[truncatedRoad.length];
-            truncatedRoad.push([beeDateFormat(oneWeekOut), null, lastSegmentFull[2]]);
+            truncatedRoad.push([bm.beeDateFormat(oneWeekOut), null, lastSegmentFull[2]]);
         } else {
             // If the goal ends before one week from today, the rate is zero
             // after the end.
-            truncatedRoad.push([beeDateFormat(oneWeekOut), null, 0]);
+            truncatedRoad.push([bm.beeDateFormat(oneWeekOut), null, 0]);
         }
         let oneWeekOutDay = oneWeekOut.day();
         let newSegment = [];
@@ -133,13 +59,13 @@ function scheduleGoal(token, goalName, schedule) {
             } else {
                 targetDate.add(i - oneWeekOutDay + 7, 'd');
             }
-            newSegment.push([beeDateFormat(targetDate), null, rUnitMultiplier * schedule[i]]);
+            newSegment.push([bm.beeDateFormat(targetDate), null, rUnitMultiplier * schedule[i]]);
         }
         newSegment.sort(); // this is done by comparing on string representations.
         console.log("New segment:");
         console.log(newSegment);
         let newRoadall = truncatedRoad.concat(newSegment);
-        return setRoad(goalName, newRoadall, token);
+        return bm.setRoad(goalName, newRoadall, token);
     });
 }
 
@@ -178,7 +104,7 @@ module.exports.getGoalSlugs = ipBlockWrapper((event, context, cb) => {
         const access_token = event.queryStringParameters.access_token;
         const username = event.queryStringParameters.username;
         const logMsg = str => console.log(username + ": " + str);
-        getUserInfoPromise(access_token)
+        bm.getUserInfo(access_token)
             .then(
                 (uinfo => {
                     if (username === uinfo.username) {
@@ -425,7 +351,7 @@ module.exports.backupDDB = (evt, ctx, cb) => {
     });
 };
 
-const echosIP = "173.239.230.74";
+const echosIP = "67.189.87.218";
 
 // Take a HTTP request handler and wrap it such that requests to stages other
 // than prod are blocked if they don't come from my IP address.
