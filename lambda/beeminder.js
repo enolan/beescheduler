@@ -16,7 +16,7 @@ module.exports.setRoad = (goalName, roadAll, token) => {
         json: true,
         body: {
             'access_token': token,
-            'roadall': roadAll
+            'roadall': normalizeRoad(roadAll)
         }
     };
     if (roadAll.length === 0) {
@@ -30,6 +30,36 @@ module.exports.setRoad = (goalName, roadAll, token) => {
         return rqpr(opts);
     }
 };
+
+function normalizeRoad(roadAll) {
+    // Walk down the road, coalescing consecutive segments with the same rate.
+    // Hopefully this will make it less error prone?
+
+    const isTimeAndRate = (segment) =>
+              segment[0] !== null && segment[2] !== null;
+
+    // The first row is an initial date and value, it's always preserved.
+    let out = [_.clone(roadAll[0])];
+
+    for (let i = 1; i < roadAll.length; i++) {
+        if (isTimeAndRate(roadAll[i]) && isTimeAndRate(out[out.length - 1])) {
+            if (roadAll[i][2] === out[out.length - 1][2]) {
+                console.log("extending segment: ", out[out.length - 1]);
+                out[out.length - 1][0] = roadAll[i][0];
+            } else {
+                console.log("adding segment (1): ", roadAll[i]);
+                out.push(_.clone(roadAll[i]));
+            }
+        } else {
+            console.log("adding segment (2): ", roadAll[i]);
+            out.push(_.clone(roadAll[i]));
+        }
+    }
+
+    console.log("Normalized road:");
+    console.log(out);
+    return out;
+}
 
 module.exports.getGoal = (token, goalName) => {
     return rqpr({
