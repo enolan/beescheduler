@@ -74,6 +74,13 @@ function helpWell() {
                 Beescheduler for one of them, click on the checkbox under
                 "Using Beescheduler" and fill in rates for each day of the week.
             </p>
+            <p>
+                <b>WARNING:</b> For technical reasons, any goals you use
+                Beescheduler for will always appear to end in two weeks. The
+                road will end in two weeks when you first set them up, and every
+                day the end date will advance one day, maintaining the two weeks
+                time.
+            </p>
         </Well>
     </div>);
 }

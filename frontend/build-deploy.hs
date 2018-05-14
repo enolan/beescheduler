@@ -1,5 +1,5 @@
 #!/usr/bin/env stack
--- stack --resolver lts-8.13 script
+-- stack --resolver lts-8.13 script --nix --nix-packages zlib --no-nix-pure
 {-# LANGUAGE BangPatterns, QuasiQuotes #-}
 import Control.Concurrent
 import Control.Monad
