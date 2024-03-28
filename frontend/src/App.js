@@ -119,11 +119,11 @@ class App extends React.Component {
 
   client_id() {
     if (document.location.href.match(/localhost/) !== null) {
-      return "dqlmuqav6goh1cy9bdmpyu6wz";
+      return "CHANGETHIS";
     } else if (document.location.href.match(/beescheduler-dev.echonolan.net/) !== null) {
-      return "atfphg2m06sjkavmodmwxxlfp";
+      return "CHANGETHIS";
     } else if (document.location.href.match(/beescheduler.echonolan.net/)) {
-      return "10wj7uf0lsk5jjqtfitwxakm4";
+      return "CHANGETHIS";
     } else {
       alert("Couldn't figure out which client ID to use, aborting");
     }

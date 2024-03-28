@@ -351,7 +351,7 @@ module.exports.backupDDB = (evt, ctx, cb) => {
     });
 };
 
-const echosIP = "67.189.87.218";
+const echosIP = "CHANGETHIS";
 
 // Take a HTTP request handler and wrap it such that requests to stages other
 // than prod are blocked if they don't come from my IP address.
